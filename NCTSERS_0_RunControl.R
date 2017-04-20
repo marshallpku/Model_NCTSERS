@@ -1,4 +1,4 @@
-# Run control file of the PSERS model
+# Run control file of the NCTSERS model
 
 
 #********************************************************************************
@@ -59,22 +59,8 @@ source("Functions.R")
 
 
 
-## Assumptions and simplifications
-# 1. Assume all terms take a lump sum benefit equal to the present value 
-# 2. Assume members are elgible for death benefit only after they are eligible for early or normal retirement. Assume the benefit
 
 
-## For PSERS death benefit: 
-#    1. Lump sum death benefit equal to PV of future benefit (Bx.death * ax.deathBen);
-#    2. Death benefit are assumed to be claimed 1 year after death     
-
-
-# For PSERS term benefit: 
-#   1. Vested terms begin to receive benefit 1 year after termination. (use the same method as disability benefit.)
-#   2. benefits are equal to accrued benefit up to the year of termination 
-#   3. Should be reduced later. 
-
-# PSERS: expand qxm.post.male/female with qxm.pre.male/female
 
 
 
@@ -134,9 +120,9 @@ for(runName in runList$runname ){
   
   
  # Benefit provisions
-  paramlist$r.min  <- 55 # this is not required age of retirement benefit. 
-  paramlist$r.max  <- 74 
-  paramlist$bfactor <- 0.025
+  paramlist$r.min  <- 50 # this is not required age of retirement benefit. 
+  paramlist$r.max  <- 75 
+  paramlist$bfactor <- 0.0182
   
   # paramlist$r.full <- 50 # age at which vested terms are assumed to retire(Temp, should use r.vben)
   # paramlist$r.vben <- 50 # age at which vested terms are assumed to retire.
@@ -147,8 +133,8 @@ for(runName in runList$runname ){
   #paramlist$salgrowth_amort <- 0.035   #   0.035 #0.213 # paryoll growth 5.5%, 3.5%, 2.13%
   #paramlist$amort_type <- "open"
   
-  paramlist$s.lower <- -Inf # No corridor for AA
-  paramlist$s.upper <- Inf
+  paramlist$s.lower <- 0.8 # No corridor for AA
+  paramlist$s.upper <- 1.2
  
   paramlist$actuarial_method <- "EAN.CP" 
   
@@ -156,17 +142,17 @@ for(runName in runList$runname ){
 
   
  # Economic assumption
-  paramlist$infl <- 0.0275
+  paramlist$infl <- 0.03
   paramlist$prod <- 0.01
   paramlist$startingSal_growth <- paramlist$infl + paramlist$prod
 
   
  # Demographic
   paramlist$Grouping    <- "fillin"
-  paramlist$newEnt_byTier <- c(tCD = 0, tE = 0.85, t3 = 0.15)
+  #paramlist$newEnt_byTier <- c(tCD = 0, tE = 0.85, t3 = 0.15)
 
-  paramlist$pct.ca.M <-  0.25 # proportion of males who opt for ca upon retirement
-  paramlist$pct.ca.F <-  0.25
+  paramlist$pct.ca.M <-  0.4 # proportion of males who opt for ca upon retirement
+  paramlist$pct.ca.F <-  0.4
   
   
  
@@ -178,20 +164,20 @@ for(runName in runList$runname ){
   # Parameters derived from the parameter list above. 
   paramlist$range_ea = with(Global_paramlist, min.ea:max.ea)
   paramlist$range_age = with(Global_paramlist, min.age:max.age)
-  paramlist$range_age.r = with(paramlist, 25:r.max)
+  paramlist$range_age.r = with(paramlist, 20:r.max)
   paramlist$v     = with(paramlist, 1/(1 + i))
   
   
 
-  if(paramlist$tier == "sumTiers"){
-    source("PSERS_0_Master_allTiers.R")
-    save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, "_", runName, ".RData"))
-
-  } else {
-    Tier_select <- paramlist$tier
-    source("PSERS_0_Master_singleTier.R")
-    save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, runName, ".RData"))
-  }
+  # if(paramlist$tier == "sumTiers"){
+  #   source("NCTSERS_0_Master_allTiers.R")
+  #   save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, "_", runName, ".RData"))
+  # 
+  # } else {
+  #   Tier_select <- paramlist$tier
+  #   source("NCTSERS_0_Master_singleTier.R")
+  #   save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, runName, ".RData"))
+  # }
 
 }
 
