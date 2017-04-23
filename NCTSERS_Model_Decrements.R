@@ -37,14 +37,14 @@ get_decrements <- function(Tier_select,
 
   
 # Tier_select <- "t1"
-# .Global_paramlist = Global_paramlist
-# .paramlist = paramlist
+#.Global_paramlist = Global_paramlist
+#.paramlist = paramlist
 
 assign_parmsList(.Global_paramlist, envir = environment())
 assign_parmsList(.paramlist,        envir = environment())
 
-mortality
-occupGender
+# mortality
+# occupGender
 
 #*************************************************************************************************************
 #                                Prepare mortality tables for NCTSERS                     #####                  
@@ -83,7 +83,7 @@ mortality.model <- data.frame(age = range_age) %>%
                   qxmd.female * occupGender["actives", "pct.female.all"],
          
          # mortality for vested terms
-          qxm.terms = qxm.post.male * occupGender["actives", "pct.male.all"] +  qxm.post.female * occupGender["actives", "pct.female.all"]
+          qxm.term = qxm.post.male * occupGender["actives", "pct.male.all"] +  qxm.post.female * occupGender["actives", "pct.female.all"]
          
          ) %>% 
   select(year, age, qxm.pre, 
@@ -92,7 +92,8 @@ mortality.model <- data.frame(age = range_age) %>%
                     qxm.post.sur.male, 
                     qxm.post.sur.female, 
                     qxm.post.sur, 
-                    qxm.d)
+                    qxm.d,
+                    qxm.term)
         
          
          
@@ -242,23 +243,39 @@ termrates.model
 #*************************************************************************************************************
 
 # retirement rates
-retrates.model  <- retRates %>% 
-  mutate(qxr.early  = qxr.male.early * pct.male + qxr.female.early * pct.female,
-         qxr.super  = qxr.male.super * pct.male + qxr.female.super * pct.female) %>% 
-  select(age, qxr.early, qxr.super)
-retrates.model                                     
 
-
-retRates %>% 
+# fill age for each yos. yos is not filled                                  
+retRates.spreadage <- 
+  retRates %>% 
   gather(var, value, -yos, -age) %>% 
   mutate(var.yos = paste0(var, yos)) %>% 
   select(var.yos, age, value) %>% 
   splong("age", 50:75) %>% 
-  mutate(yos = str_extract(var.yos, "\\d{1,2}"),
+  mutate(yos = as.numeric(str_extract(var.yos, "\\d{1,2}")),
          var = str_extract(var.yos, "\\D+")) %>% 
-  select(-var.yos)
+  select(-var.yos) %>% 
+  mutate(value = ifelse(age < 60, 0, value)) %>% # Drop retirement rates for law enforcement before 60. 
+  spread(var, value) %>% 
+  arrange(yos, age)
 
-  
+retRates.spreadage
+
+retrates.model <- expand.grid(yos = 0:(r.max - min.age), age = r.min:r.max) %>% 
+  mutate(yos.match = ceiling(yos * 2/10) * 10/2,
+         yos.match = ifelse(yos.match > 35, 35, yos.match)) %>% 
+  left_join(retRates.spreadage %>% rename(yos.match = yos)) %>% 
+  group_by(age) %>% 
+  mutate_at(vars(-yos, -age), funs(ifelse(yos == 0, 0, .))) %>% 
+  mutate(qxr = qxr.male.tch   * occupGender["actives", "share.tch.male"] + 
+               qxr.female.tch * occupGender["actives", "share.tch.female"] + 
+               qxr.male.edu   * occupGender["actives", "share.edu.male"] + 
+               qxr.female.edu * occupGender["actives", "share.edu.female"] + 
+               qxr.law        * (occupGender["actives", "share.law.male"] + occupGender["actives", "share.law.female"]) + 
+               qxr.male.gen   * occupGender["actives", "share.gen.male"] + 
+               qxr.female.gen * occupGender["actives", "share.gen.female"]) %>% 
+  select(yos, age, qxr) %>% 
+  arrange(yos, age) 
+
 
 
 
@@ -267,20 +284,20 @@ retRates %>%
 #*************************************************************************************************************
 
 # Create decrement table and calculate probability of survival
-decrement.model <- expand.grid(age = range_age, ea = range_ea) %>% 
-  mutate(yos = age - ea) %>% 
+decrement.model <- expand.grid(start.year = init.year:(init.year + nyear - 1), age = range_age, ea = range_ea) %>% 
+  mutate(yos = age - ea,
+         year = start.year + yos) %>% 
   filter(age >= ea) %>% 
   left_join(mortality.model) %>%                  # mortality 
   left_join(termrates.model)  %>%                 # termination
   left_join(disbrates.model)  %>%                 # disability
   left_join(retrates.model) %>%                   # early retirement
   select(ea, age, everything()) %>%          
-  arrange(ea, age)  %>%
+  arrange(start.year, ea, age)  %>%
   colwise(na2zero)(.) %>% 
-  group_by(ea) 
+  group_by(start.year, ea) 
 
 decrement.model
-
 
 
 
@@ -289,104 +306,58 @@ decrement.model
 #                      3. Adjustments to decrement tables  ####
 #*************************************************************************************************************
 
-## Combining early retirement rates and supaerannuation retirement rates
+# Retirement rates are effective only when eligibility requirements are met
+# non-law enforcement requirements are used
 
-## Superannuation eligibility
- # Tier C/D
-   #- age 62 or
-   #- age >= 60, yos >=30, or
-   #- yos >= 35
- 
- # Tier E/F
-   #- age >= 65, yos >= 3
-   #- age + yos >= 92, yos >= 35
-   #- age >=74  (Model assumption)
-# Early retirement eligibility
- # age >= 55, yos >= 25
+# Term rates are zero when eligible for retirement benefit.
+
+
+# Unreduced benefit
+   # 1.age >= 65, yos >=5, or
+   # 2.age >=60, yos >=25, or
+   # 3.yos >=30
+
+# Reduced benefit
+   # 1. age >=60, yos >=5, or
+   # 2. age >=50, yos >=20, and does not meet 1 and unreduced benefit
+
+# vesting rules: yos >= 5
+
+# assume zero term rates after age 60. 
 
 
 decrement.model %<>% 
-  group_by(ea) %>% 
+  group_by(start.year, ea) %>% 
   mutate(# Early retirement
-         elig_early = ifelse(age >= 55 & yos >=25, 1, 0),
+         elig_retFull = ifelse((age >= 65 & yos >= 5)| 
+                               (age >= 60 & yos >= 25)| 
+                                yos >= 30, 1, 0),
          
          # superannuation retirement
-         elig_super_tCD = ifelse( age >=62 | 
-                                  (age >=60 & yos >=30) | 
-                                  yos >= 35,
-                                  1, 0),
-         elig_super_tE  = ifelse( age>=74 |
-                                  (age >= 65 & yos >=3) |
-                                  (age + yos >= 92 & yos >= 35),
-                                  1, 0),
-         elig_super_tF  = elig_super_tE,
+         elig_retReduced =  ifelse(((age >= 60 & yos >= 5)| (age >= 50 & yos >= 20)) & elig_retFull == 0, 1, 0),
+
          
-         # The age first eligible for superannuation in a ea group
-         age_superFirst_tCD = age[min(which(elig_super_tCD == 1))],
-         age_superFirst_tE = age[min(which(elig_super_tE == 1))],
-         age_superFirst_tF = age[min(which(elig_super_tF == 1))], 
+         # The age first eligible for superannuation in a start.year-ea group
+         age_retFullFirst = age[min(which(elig_retFull == 1))],
+
          
-         # Combined retirement rates
-         qxr_tCD = ifelse(elig_super_tCD == 1, qxr.super, 
-                          ifelse(elig_early == 1, qxr.early, 0)),
-         qxr_tE = ifelse(elig_super_tE == 1, qxr.super, 
-                          ifelse(elig_early == 1, qxr.early, 0)),
-         qxr_tF = ifelse(elig_super_tF == 1, qxr.super, 
-                          ifelse(elig_early == 1, qxr.early, 0)),
+         # adjust retirement rates
+         qxr = ifelse(elig_retFull == 1| elig_retReduced == 1, qxr, 0),
          
          
          # Vesting
-         elig_vest_tCD = ifelse(yos >= 5,  1, 0),
-         elig_vest_tE  = ifelse(yos >= 10, 1, 0),
-         elig_vest_tF  = ifelse(yos >= 10, 1, 0),
+         elig_vest = ifelse(yos >= 5,  1, 0),
          
-         # Mortality for death benefit recievers (assume eligible if vested)
-         qxm.deathBen_tCD = ifelse(age < 50, qxm.pre, qxm.post.male * pct.male + qxm.post.female * pct.female),
-         qxm.deathBen_tE  = qxm.deathBen_tCD,
-         qxm.deathBen_tF  = qxm.deathBen_tCD,
+         # adjust term rates
          
-         # Mortality for vested terms 
-         qxm.term = ifelse(age < 50, qxm.pre, qxm.post.male * pct.male + qxm.post.female * pct.female)
-
+         qxt = ifelse(elig_retFull == 1| elig_retReduced == 1, 0, qxt),
+         qxt = ifelse(age >= 60, 0, qxt)
          )
  
 
-# Adjustment to term rates
-# 1. extend qxt beyond age 61. (max in the AV)?
-# 2. Coerce termination rates to 0 when eligible for early retirement or reaching than r.full(when we assume terms start to receive benefits). 
-
-decrement.model %<>% mutate(
-  qxt_tCD = ifelse(elig_early == 0 & elig_super_tCD == 0, qxt, 0 ),
-  qxt_tE  = ifelse(elig_early == 0 & elig_super_tE == 0, qxt, 0 ),
-  qxt_tF  = ifelse(elig_early == 0 & elig_super_tF == 0, qxt, 0 )
-)
-  
-
-
-
-
-
 
 #*************************************************************************************************************
-#                                   4. Selecting tier decrements ####
-#*************************************************************************************************************
-
-  decrement.model %<>% 
-    mutate_(qxr = paste0("qxr_", Tier_select),
-            qxt = paste0("qxt_", Tier_select),
-            qxm.deathBen = paste0("qxm.deathBen_", Tier_select),
-            
-            elig_super     = paste0("elig_super_",     Tier_select),
-            age_superFirst = paste0("age_superFirst_", Tier_select),
-            
-            elig_vest     = paste0("elig_vest_",     Tier_select)
-            )
-
-
-
-
-#*************************************************************************************************************
-#                                   4. Modify retirement rates ####
+#                                   3. Modify retirement rates ####
 #*************************************************************************************************************
 
 # Adjustment to the decrement table:
@@ -395,8 +366,9 @@ decrement.model %<>% mutate(
   # which means all active members who survive all other risks at (r.max - 1) will enter the status "retired" for sure at age r.max (and collect the benefit regardless 
   # whether they will die at r.max)      
 
-pct.ca <- pct.ca.M * pct.male + pct.ca.F * pct.female
+pct.ca <- pct.ca.M * occupGender["actives", "pct.male.all"] + pct.ca.F * occupGender["actives", "pct.female.all"]
 pct.la <- 1 - pct.ca
+
 
 decrement.model %<>% group_by(ea) %>%  
   mutate(qxr = ifelse(age == r.max - 1,
@@ -420,23 +392,23 @@ decrement.model %<>% group_by(ea) %>%
 
 
 #*************************************************************************************************************
-#                                            5. compute various survival rates ####
+#                                            4. compute various survival rates ####
 #*************************************************************************************************************
 
 
 decrement.model %<>% 
   group_by(ea) %>% 
   mutate( pxm.pre = 1 - qxm.pre,
-          pxm.deathBen = 1 - qxm.deathBen,
+          #pxm.deathBen = 1 - qxm.deathBen,
           pxm.d        = 1 - qxm.d,
           pxm.term     = 1 - qxm.term,
           
           pxT     = 1 - qxt - qxd - qxm.pre - qxr,                            
           
           pxRm        = order_by(-age, cumprod(ifelse(age >= r.max, 1, pxm.pre))), # prob of surviving up to r.max, mortality only
-          px_r.full_m = order_by(-age, cumprod(ifelse(age >= tier.param[Tier_select, "r.vben"], 1, pxm.pre))), # Should be deleted later
-          px_r.vben_m = order_by(-age, cumprod(ifelse(age >= tier.param[Tier_select, "r.vben"], 1, pxm.pre))),
-          px_r.vsuper_m = order_by(-age, cumprod(ifelse(age >= age_superFirst, 1, pxm.pre)))
+          px_r.full_m = order_by(-age, cumprod(ifelse(age >= r.vben, 1, pxm.pre))), # Should be deleted later
+          px_r.vben_m = order_by(-age, cumprod(ifelse(age >= r.vben, 1, pxm.pre))),
+          px_r.vsuper_m = order_by(-age, cumprod(ifelse(age >= r.vben, 1, pxm.pre))) # order_by(-age, cumprod(ifelse(age >= age_superFirst, 1, pxm.pre)))
           
           # px65T = order_by(-age, cumprod(ifelse(age >= r.max, 1, pxT))), # prob of surviving up to r.max, composite rate
           # p65xm = cumprod(ifelse(age <= r.max, 1, lag(pxm))))            # prob of surviving to x from r.max, mortality only

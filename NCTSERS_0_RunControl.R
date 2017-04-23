@@ -59,8 +59,9 @@ source("Functions.R")
 
 
 
-
-
+# Drop retirement rates for law enforcement before 60. Next step: push retirement before 60 to age 60. 
+# assume zero term rates after age 60. 
+# Simplified term benefits: all vested terms start receiving benfits in age 60 regardless of yos.
 
 
 
@@ -124,8 +125,8 @@ for(runName in runList$runname ){
   paramlist$r.max  <- 75 
   paramlist$bfactor <- 0.0182
   
-  # paramlist$r.full <- 50 # age at which vested terms are assumed to retire(Temp, should use r.vben)
-  # paramlist$r.vben <- 50 # age at which vested terms are assumed to retire.
+  paramlist$r.full <- 60 # age at which vested terms are assumed to retire(Temp, should use r.vben)
+  paramlist$r.vben <- 60 # age at which vested terms are assumed to retire.
   
 
  # Funding policy 
