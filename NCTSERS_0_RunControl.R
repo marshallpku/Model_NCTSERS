@@ -62,7 +62,12 @@ source("Functions.R")
 # Drop retirement rates for law enforcement before 60. Next step: push retirement before 60 to age 60. 
 # assume zero term rates after age 60. 
 # Simplified term benefits: all vested terms start receiving benfits in age 60 regardless of yos.
+# Min age for initial non-active members should be above 20 (age >= 21).  
 
+
+# To Do
+
+# get_init.benefitFirstYear.term
 
 
 #### Model Parameters ####

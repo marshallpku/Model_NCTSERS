@@ -369,7 +369,9 @@ fn_actives <- function(sheet, file_ = file_memberData){
 } 
 
 # Import all actives 
-init_actives_all <- fn_actives("Actives") %>% arrange(planname, ea, age)
+init_actives_all <- fn_actives("Actives") %>% arrange(planname, ea, age) %>% 
+  filter(planname == "Actives_fillin") %>% 
+  mutate(planname = "Actives_t1_fillin")
 
 
 

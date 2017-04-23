@@ -42,17 +42,39 @@ get_tierData <- function(df, tier, grouping = paramlist$Grouping) df %<>% filter
 #*************************************************************************************************************
 #                         Salary 1.  Create salary scale                   #####                  
 #*************************************************************************************************************
-# No need to modify salary growth table for PSERS
-get_salgrowth <- function() salgrowth
 
- 
+# Fill salary growth scale
+
+salgrowth.model <- 
+  salgrowth %>% gather(var, value, -yos) %>% 
+  splong("yos", c(0:25)) %>% 
+  spread(var, value) %>% 
+  mutate(
+         salgrowth = 
+           salgrowth.tch   * occupGender["actives", "pct.tch"] + 
+           salgrowth.edu   * occupGender["actives", "pct.edu"] + 
+           salgrowth.law   * occupGender["actives", "pct.law"] + 
+           salgrowth.gen   * occupGender["actives", "pct.gen"]
+  ) %>% 
+  select(yos, salgrowth)
+
+salgrowth.model <- 
+  data.frame(yos = 0:(paramlist$r.max - Global_paramlist$min.age) ) %>%
+  left_join(salgrowth.model) %>% 
+  mutate(salgrowth = ifelse(yos > 25, salgrowth[yos == 25], salgrowth))
+  
+
+
+# No need to modify salary growth table for PSERS
+get_salgrowth <- function() salgrowth.model
+
 
 #*************************************************************************************************************
 #                         Salary 2.  Create complete salary scale                                    #####                  
 #*************************************************************************************************************
 
 get_scale <- function(
-   .salgrowth = salgrowth,
+   .salgrowth,
    .paramlist = paramlist,
    .Global_paramlist  = Global_paramlist
   ){
@@ -66,7 +88,7 @@ get_scale <- function(
   
   
   # Run the section below when developing new features. 
-  # .salgrowth        = salgrowth
+  # .salgrowth        = salgrowth.model
   # .paramlist = paramlist
   # .Global_paramlist  = Global_paramlist
   
@@ -99,7 +121,9 @@ get_scale <- function(
   return(SS.all)
 }
 
-SS.all <- get_scale()
+#SS.all <- get_scale(salgrowth.model)
+
+#SS.all$start.year %>% min
 
 #*************************************************************************************************************
 #                         Salary 3. Supplement the inital salary table with all starting salary        #####                  
@@ -136,7 +160,7 @@ fill_startSal <- function(.actives,         # = tailored_demoData$actives,
   
 }
 
-# get_tierData(init_actives_all, "t6") %>%  fill_startSal %>% ungroup %>% arrange(ea, age)
+# init_sal <- get_tierData(init_actives_all, "t1") %>%  fill_startSal %>% ungroup %>% arrange(ea, age)
 
 
 
@@ -172,7 +196,7 @@ get_salary <- function(.SS.all = SS.all,
   return(salary)
 }
 
-# salary <- get_salary() 
+#  salary <- get_salary() 
 # salary %>% filter(start.year < 2015) %>% arrange(start.year, ea, age)
 
 
@@ -204,8 +228,9 @@ return(salary.fn)
 }
 
 
-# x <-  get_salary_proc("tCD") %>% arrange(start.year, ea, age)
-
+ # x <-  get_salary_proc("t1") %>% arrange(start.year, ea, age)
+ # 
+ # x %>% filter(start.year == 1975, ea == 30)
 
 
 #*************************************************************************************************************
@@ -266,8 +291,8 @@ get_benefit.disb <- function(
 
 
 
-# get_tierData(init_retirees_all, "tCD") %>% get_benefit()
-# get_tierData(init_disb_all, "tCD") %>% get_benefit.disb()
+get_tierData(init_retirees_all, "t1") %>% get_benefit()
+get_tierData(init_disb_all, "t1") %>% get_benefit.disb()
 
 
 
@@ -286,11 +311,11 @@ get_initPop <- function (.actives,
   # Import and standardize the total number of actives and retirees.  
   
   # Run the section below when developing new features.
-       # .actives           = get_tierData(init_actives_all, Tier_select_)
-       # .retirees          = get_tierData(init_retirees_all, Tier_select_)
-       # .terminated        = get_tierData(init_terms_all, Tier_select_)
-       # 
-       #  trim = TRUE   
+  # .actives           = get_tierData(init_actives_all, Tier_select)
+  # .retirees          = get_tierData(init_retirees.la_all, Tier_select)
+  # .terminated        = get_tierData(init_terms_all, Tier_select)
+  # 
+  #  trim = TRUE
   #   .paramlist        = paramlist
   #   .Global_paramlist = Global_paramlist
   
@@ -330,15 +355,15 @@ get_initPop <- function (.actives,
 }
 
 
-# x <- get_initPop(get_tierData(init_actives_all, Tier_select),
-#             get_tierData(init_retirees.la_all, Tier_select),
-#             get_tierData(init_terms_all, Tier_select),
-#             get_tierData(init_disb.la_all, Tier_select)
-#             )
+x <- get_initPop(get_tierData(init_actives_all, Tier_select),
+            get_tierData(init_retirees.la_all, Tier_select),
+            get_tierData(init_terms_all, Tier_select),
+            get_tierData(init_disb.la_all, Tier_select)
+            )
 
-#x$actives
+# x$actives
 # x$retirees %>% sum
-
+# x$retirees
 
 #*************************************************************************************************************
 #                            Infering ditribution of entrants from low yos actives                       #####                  
@@ -401,7 +426,7 @@ get_entrantsDist <- function(.actives,          #= tailored_demoData$actives,
   return(dist)
 }
 
-# entrants_dist <- get_entrantsDist(init_actives)
+# entrants_dist <- get_entrantsDist(init_actives_all)
 # entrants_dist
 
 
@@ -454,12 +479,9 @@ get_entrantsDist_tier <- function(Tier_select_, grouping_ =  paramlist$Grouping)
 }
 
 
-# get_benefit_tier("tE")
-# get_initPop_tier("tE")
-# get_entrantsDist_tier("tE")
-
-
-
+get_benefit_tier("t1")
+get_initPop_tier("t1")
+get_entrantsDist_tier("t1")
 
 
 
