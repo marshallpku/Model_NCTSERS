@@ -9,16 +9,16 @@ Tier_select <- paramlist$tier
 #*********************************************************************************************************
 # Plan information
  source("NCTSERS_Data_PlanInfo_AV2015.R")
- source("PSERS_Data_MemberData_AV2015.R")
+ source("NCTSERS_Data_MemberData_AV2015.R")
 
-load("Data_inputs/PSERS_PlanInfo_AV2015.RData")    # for all tiers
-load("Data_inputs/PSERS_MemberData_AV2015.RData")  # for all tiers
-load("Data_inputs/DC_rate.tot.RData")             
+load("Data_inputs/NCTSERS_PlanInfo_AV2015.RData")    # for all tiers
+load("Data_inputs/NCTSERS_MemberData_AV2015.RData")  # for all tiers
+           
 
 init_beneficiaries_all %<>% filter(age >= 25) 
 
 
-pct.init.ret.la <-  0.75
+pct.init.ret.la <-  0.6
 pct.init.ret.ca  <- 1 - pct.init.ret.la
 
 pct.init.disb.la <-  1
@@ -47,7 +47,7 @@ init_disb.ca_all <- init_disb_all %>%
 #*********************************************************************************************************
 
 # Decrement tables
-source("PSERS_Model_Decrements.R")
+source("NCTSERS_Model_Decrements.R")
 
 list.decrements      <- get_decrements(Tier_select)
 decrement.model      <- list.decrements$decrement.model
@@ -79,7 +79,7 @@ mortality.post.model <- list.decrements$mortality.post.model
 #*********************************************************************************************************
 # 1.3  Actual investment return, for all tiers ####
 #*********************************************************************************************************
-source("PSERS_Model_InvReturns.R")
+source("NCTSERS_Model_InvReturns.R")
 i.r <- gen_returns()
 #i.r[, 3] <-  c(paramlist$ir.mean, paramlist$ir.mean/2, rep(paramlist$ir.mean, Global_paramlist$nyear - 2))
 
@@ -89,7 +89,7 @@ i.r <- gen_returns()
 # 1.2 Create plan data ####
 #*********************************************************************************************************
 
-source("PSERS_Model_PrepData.R")
+source("NCTSERS_Model_PrepData.R")
 
 salary       <- get_salary_proc(Tier_select)
 benefit      <- get_benefit_tier(Tier_select)
@@ -101,7 +101,7 @@ entrants_dist <- get_entrantsDist_tier(Tier_select)
 #*********************************************************************************************************
 # 2. Demographics ####
 #*********************************************************************************************************
-source("PSERS_Model_Demographics.R")
+source("NCTSERS_Model_Demographics.R")
 gc()
 pop <- get_Population()
 
@@ -110,7 +110,7 @@ pop <- get_Population()
 #*********************************************************************************************************
 # 3. Actuarial liabilities and benefits for contingent annuitants and survivors ####
 #*********************************************************************************************************
-source("PSERS_Model_ContingentAnnuity.R")
+source("NCTSERS_Model_ContingentAnnuity.R")
 
 # For service retirement
 liab.ca <- get_contingentAnnuity(Tier_select, 
@@ -131,7 +131,7 @@ liab.disb.ca <- get_contingentAnnuity(Tier_select,
 #*********************************************************************************************************
 # 4. Individual actuarial liabilities, normal costs and benenfits ####
 #*********************************************************************************************************
-source("PSERS_Model_IndivLiab.R")
+source("NCTSERS_Model_IndivLiab.R")
 gc()
 
 liab <- get_indivLab(Tier_select)
@@ -143,7 +143,7 @@ liab <- get_indivLab(Tier_select)
 #*********************************************************************************************************
 # 5. Aggregate actuarial liabilities, normal costs and benenfits ####
 #*********************************************************************************************************
-source("PSERS_Model_AggLiab.R")
+source("NCTSERS_Model_AggLiab.R")
 gc()
 
 AggLiab <- get_AggLiab(Tier_select,
@@ -156,7 +156,7 @@ AggLiab <- get_AggLiab(Tier_select,
 #*********************************************************************************************************
 # 6.  Simulation ####
 #*********************************************************************************************************
-source("PSERS_Model_Sim.R")
+source("NCTSERS_Model_Sim.R")
 penSim_results <- run_sim(Tier_select, AggLiab)
 
 

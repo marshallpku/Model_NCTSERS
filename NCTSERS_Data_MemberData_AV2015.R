@@ -470,7 +470,48 @@ init_terms_all %<>% mutate(ea = 20)
 # pct.female <-  1 - pct.male
 # 
 occupGender <- read_ExcelRange(file_memberData, sheet = "prop.occupation", "B2", "B3")
+#occupGender
 
+
+## Assumptions on gender ratio for each occupation
+
+ # 1. Assume overall gender ratio for all member types is M:F = 0.31:0.69
+ # 2. Predetermined gender ratio for tch, edu, and law:
+   # tch/edu: M:0.25   (Ref: UCRP actives M:0.396; TPAF actives M:0.234) 
+   # law:     M:0.95   (Ref: LAFPP M:0.95)
+   # gen: calculated: 
+
+occupGender %<>% 
+  mutate(ntot = tch + edu + gen + law,
+         
+         pct.tch = tch / ntot,
+         pct.edu = edu / ntot,
+         pct.law = law / ntot,
+         pct.gen = gen / ntot,
+    
+         pct.male.all = 0.31,
+         pct.male.tch = 0.25,
+         pct.male.edu = 0.25,
+         pct.male.law = 0.95,
+         pct.male.gen = ((tch + edu + gen + law) * pct.male.all - tch * pct.male.tch - edu * pct.male.edu - law * pct.male.law)/gen,
+         
+         pct.female.all = 1 - pct.male.all,
+         pct.female.tch = 1 - pct.male.tch,
+         pct.female.edu = 1 - pct.male.edu,
+         pct.female.law = 1 - pct.male.law,
+         pct.female.gen = 1 - pct.male.gen,
+         
+         share.tch.male   = pct.tch * pct.male.tch,
+         share.tch.female = pct.tch * pct.female.tch,
+         share.edu.male   = pct.edu * pct.male.edu,
+         share.edu.female = pct.edu * pct.female.edu,
+         share.law.male   = pct.law * pct.male.law,
+         share.law.female = pct.law * pct.female.law,
+         share.gen.male   = pct.gen * pct.male.gen,
+         share.gen.female = pct.gen * pct.female.gen
+         )
+
+rownames(occupGender) <- occupGender$type
 
 
 
