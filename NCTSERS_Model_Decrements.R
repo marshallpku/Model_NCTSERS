@@ -83,7 +83,9 @@ mortality.model <- data.frame(age = range_age) %>%
                   qxmd.female * occupGender["actives", "pct.female.all"],
          
          # mortality for vested terms
-          qxm.term = qxm.post.male * occupGender["actives", "pct.male.all"] +  qxm.post.female * occupGender["actives", "pct.female.all"]
+         qxm.term = qxm.post.male * occupGender["actives", "pct.male.all"] +  qxm.post.female * occupGender["actives", "pct.female.all"],
+         
+         qxm.deathBen = qxm.post.sur
          
          ) %>% 
   select(year, age, qxm.pre, 
@@ -93,7 +95,8 @@ mortality.model <- data.frame(age = range_age) %>%
                     qxm.post.sur.female, 
                     qxm.post.sur, 
                     qxm.d,
-                    qxm.term)
+                    qxm.term,
+                    qxm.deathBen)
         
          
          
@@ -284,7 +287,7 @@ retrates.model <- expand.grid(yos = 0:(r.max - min.age), age = r.min:r.max) %>%
 #*************************************************************************************************************
 
 # Create decrement table and calculate probability of survival
-decrement.model <- expand.grid(start.year = init.year:(init.year + nyear - 1), age = range_age, ea = range_ea) %>% 
+decrement.model <- expand.grid(start.year = (init.year - (max.age - min.age)):(init.year + nyear - 1), age = range_age, ea = range_ea) %>% 
   mutate(yos = age - ea,
          year = start.year + yos) %>% 
   filter(age >= ea) %>% 
@@ -399,7 +402,7 @@ decrement.model %<>% group_by(ea) %>%
 decrement.model %<>% 
   group_by(ea) %>% 
   mutate( pxm.pre = 1 - qxm.pre,
-          #pxm.deathBen = 1 - qxm.deathBen,
+          pxm.deathBen = 1 - qxm.deathBen,
           pxm.d        = 1 - qxm.d,
           pxm.term     = 1 - qxm.term,
           
