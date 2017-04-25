@@ -240,10 +240,9 @@ salgrowth <- read_ExcelRange(file_planInfo, sheet="SalaryGrowth") # %>% rename(a
 #                      ## Tier specific parameters ####
 #*********************************************************************************************************
 
-# tier.param <- read_ExcelRange(file_planInfo, sheet="Tier.param", colTypes="character") %>% 
-#   mutate_each(funs(as.numeric), -tier)
-# 
-# row.names(tier.param) <- tier.param$tier
+tier.param <- read_ExcelRange(file_planInfo, sheet="Tier.param", colTypes="character") %>%
+  mutate_each(funs(as.numeric), -tier)
+row.names(tier.param) <- tier.param$tier
 # 
 
 

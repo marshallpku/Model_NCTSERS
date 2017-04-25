@@ -42,9 +42,12 @@ get_contingentAnnuity <- function(Tier_select_,
   assign_parmsList(paramlist_,        envir = environment())
 
   # factor.ca <- tier.param[Tier_select_, "factor.ca"]
-  cola      <- tier.param[Tier_select_, "cola"]
-  EEC.rate <- tier.param[Tier_select_, "EEC.rate"]
-  EEC.exempt.yos <- tier.param[Tier_select_, "EEC.exempt.yos"]
+  # cola     <- # tier.param[Tier_select_, "cola"]
+  # EEC.rate <- tier.param[Tier_select_, "EEC.rate"]
+  # EEC.exempt.yos <- tier.param[Tier_select_, "EEC.exempt.yos"]
+  
+  # pct.male <- occupGender["actives", "pct.male.all"]
+  
   
   
 #*********************************************************************************************************
@@ -121,7 +124,7 @@ get_liab.ben <- function(gender.R,
        select(age, qxm.post.male, qxm.post.female)) %>% 
        # This part is for disability benefit
        mutate(qxm.post.male   = ifelse(age < min(range_age.r_), qxm.post.male[age == min(range_age.r_)],   qxm.post.male),
-             qxm.post.female = ifelse(age < min(range_age.r_), qxm.post.female[age == min(range_age.r_)], qxm.post.female))
+              qxm.post.female = ifelse(age < min(range_age.r_), qxm.post.female[age == min(range_age.r_)], qxm.post.female))
   
   
   df <- expand.grid(age = (min(range_age.post) - 3):max(range_age_), age.r = range_age.r_) %>% 

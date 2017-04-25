@@ -337,15 +337,16 @@ decrement.model %<>%
                                 yos >= 30, 1, 0),
          
          # superannuation retirement
-         elig_retReduced =  ifelse(((age >= 60 & yos >= 5)| (age >= 50 & yos >= 20)) & elig_retFull == 0, 1, 0),
-
+         elig_retReduced1 =  ifelse((age >= 60 & yos >= 5) & elig_retFull == 0, 1, 0),
+         elig_retReduced2 =  ifelse((age >= 50 & yos >= 20) & elig_retReduced1 == 0 & elig_retFull == 0, 1, 0),
+         
          
          # The age first eligible for superannuation in a start.year-ea group
          age_retFullFirst = age[min(which(elig_retFull == 1))],
 
          
          # adjust retirement rates
-         qxr = ifelse(elig_retFull == 1| elig_retReduced == 1, qxr, 0),
+         qxr = ifelse(elig_retFull == 1| elig_retReduced1 == 1 | elig_retReduced2 == 1, qxr, 0),
          
          
          # Vesting
@@ -353,7 +354,7 @@ decrement.model %<>%
          
          # adjust term rates
          
-         qxt = ifelse(elig_retFull == 1| elig_retReduced == 1, 0, qxt),
+         qxt = ifelse(elig_retFull == 1| elig_retReduced1 == 1 | elig_retReduced2 == 1, 0, qxt),
          qxt = ifelse(age >= 60, 0, qxt)
          )
  

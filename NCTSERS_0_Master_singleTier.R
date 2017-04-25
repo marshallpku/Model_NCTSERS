@@ -15,14 +15,37 @@ load("Data_inputs/NCTSERS_PlanInfo_AV2015.RData")    # for all tiers
 load("Data_inputs/NCTSERS_MemberData_AV2015.RData")  # for all tiers
            
 
+#**********************************************
+##   Modify initial data ####
+#**********************************************
+
+## Exclude selected type(s) of initial members
+#init_actives_all %<>% mutate(nactives = 0) 
+init_retirees_all %<>% mutate(nretirees = 0)
+init_beneficiaries_all %<>% mutate(nbeneficiaries = 0)
+init_terms_all %<>% mutate(nterms = 0)
+init_disb_all %<>% mutate(ndisb = 0) 
+
+## Exclude initial terms with ea < 20: Data_population, line 504 
+# init_terminated_all %<>% filter(age.term >= Global_paramlist$min.ea,
+#                                 ea >= Global_paramlist$min.ea)
+
+
+# ## Exclude the initial amortization basis when testing the program.
+# if(!paramlist$useAVamort) init_amort_raw %<>% mutate(amount.annual = 0) 
+
+
+
 init_beneficiaries_all %<>% filter(age >= 25) 
 
+paramlist$pct.ca.M <- 0# 0.4 # proportion of males who opt for ca upon retirement
+paramlist$pct.ca.F <- 0# 0.4
 
-pct.init.ret.la <-  0.6
-pct.init.ret.ca  <- 1 - pct.init.ret.la
+pct.init.ret.ca <- 0  # 0.4
+pct.init.ret.la  <- 1 - pct.init.ret.ca
 
-pct.init.disb.la <-  1
-pct.init.disb.ca  <- 1 - pct.init.disb.la
+pct.init.disb.ca <-  0
+pct.init.disb.la  <- 1 - pct.init.disb.ca
 
 init_retirees.la_all <- init_retirees_all %>%
   mutate(nretirees.la = nretirees * pct.init.ret.la) %>% 
@@ -42,6 +65,7 @@ init_disb.ca_all <- init_disb_all %>%
 
 
 
+
 #*********************************************************************************************************
 # 1.2 Create decrement tables ####
 #*********************************************************************************************************
@@ -55,24 +79,6 @@ mortality.post.model <- list.decrements$mortality.post.model
 
 
 
-#**********************************************
-##   Modify initial data ####
-#**********************************************
-
-## Exclude selected type(s) of initial members
- # init_actives_all %<>% mutate(nactives = 0) 
- # init_retirees_all %<>% mutate(nretirees = 0)
- # init_beneficiaries_all %<>% mutate(nbeneficiaries = 0)
- # init_terminated_all %<>% mutate(nterm = 0)
-
-
-## Exclude initial terms with ea < 20: Data_population, line 504 
- # init_terminated_all %<>% filter(age.term >= Global_paramlist$min.ea,
- #                                 ea >= Global_paramlist$min.ea)
-
-
-# ## Exclude the initial amortization basis when testing the program.
-# if(!paramlist$useAVamort) init_amort_raw %<>% mutate(amount.annual = 0) 
 
 
 
@@ -110,22 +116,25 @@ pop <- get_Population()
 #*********************************************************************************************************
 # 3. Actuarial liabilities and benefits for contingent annuitants and survivors ####
 #*********************************************************************************************************
-source("NCTSERS_Model_ContingentAnnuity.R")
+source("NCTSERS_Model_ContingentAnnuity_generational.R")
 
 # For service retirement
 liab.ca <- get_contingentAnnuity(Tier_select, 
-                                 tier.param[Tier_select, "factor.ca"],
-                                 min(paramlist$range_age.r):100, 
+                                 paramlist$factor.ca, # tier.param[Tier_select, "factor.ca"],
+                                 min(paramlist$range_age):100, 
                                  apply_reduction = TRUE)
 
 # For disability benefit
-range_age.disb <-  min(paramlist$range_age):100   # max(paramlist$range_age.r)
-liab.disb.ca <- get_contingentAnnuity(Tier_select, 
-                                      tier.param[Tier_select, "factor.ca.disb"],
-                                      range_age.disb, 
-                                      apply_reduction = FALSE) %>% 
-                rename(age.disb = age.r)
+# range_age.disb <-  min(paramlist$range_age):100   # max(paramlist$range_age.r)
+# liab.disb.ca <- get_contingentAnnuity(Tier_select, 
+#                                       paramlist$factor.ca.disb, # tier.param[Tier_select, "factor.ca.disb"],
+#                                       range_age.disb, 
+#                                       apply_reduction = FALSE) %>% 
+#                 rename(age.disb = age.r)
 
+
+liab.disb.ca <-  liab.ca %>% mutate_at(vars(-year.r, -age.r, -age, -year), funs(.*0)) %>% rename(age.disb = age.r)
+# liab.disb.ca %>% filter(year.r == 2016)
 
 
 #*********************************************************************************************************
@@ -152,6 +161,7 @@ AggLiab <- get_AggLiab(Tier_select,
                        liab.disb.ca,
                        pop) 
 
+# AggLiab
 
 #*********************************************************************************************************
 # 6.  Simulation ####
@@ -161,7 +171,7 @@ penSim_results <- run_sim(Tier_select, AggLiab)
 
 
 
-
+init_beneficiaries_all
 #*********************************************************************************************************
 # 7.  Saving results ####
 #*********************************************************************************************************
@@ -178,7 +188,7 @@ outputs_list <- list(paramlist = paramlist,
 
 
 var_display1 <- c("Tier", "sim", "year", "FR_MA", "MA", "AL", 
-                  "AL.act", "AL.disb.la", "AL.act.disb", "AL.act.death", "AL.act.v", "AL.la", "AL.ca", "AL.term", "PVFB", "B",
+                  "AL.act", "AL.act.laca",  "AL.act.v", "AL.la", "AL.ca", "AL.term", "PVFB", "B",
                   # "AL.disb.la", "AL.disb.ca", "AL.death", "PVFB",
                   #"PVFB.laca", "PVFB.LSC", "PVFB.v", "PVFB", 
                   # "B", "B.la", "B.ca", "B.v", "B.disb.la","B.disb.ca", 

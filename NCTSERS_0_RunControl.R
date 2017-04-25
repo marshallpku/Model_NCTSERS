@@ -63,6 +63,9 @@ source("Functions.R")
 # assume zero term rates after age 60. 
 # Simplified term benefits: all vested terms start receiving benfits in age 60 regardless of yos.
 # Min age for initial non-active members should be above 20 (age >= 21).  
+# Deferred retirement benefit:
+  # reduced benefit at age 60: accrued benefit at age.term reduced by 3% * (65-60) = 15%
+
 
 
 # To Do
@@ -133,6 +136,9 @@ for(runName in runList$runname ){
   paramlist$r.full <- 60 # age at which vested terms are assumed to retire(Temp, should use r.vben)
   paramlist$r.vben <- 60 # age at which vested terms are assumed to retire.
   
+  paramlist$factor.ca <- 1
+  paramlist$factor.ca.disb <-  1
+  
 
  # Funding policy 
   paramlist$smooth_method <- "method1"
@@ -146,6 +152,7 @@ for(runName in runList$runname ){
   
   paramlist$init_EAA <- "MA"
 
+  paramlist$EEC_rate <- 0.06
   
  # Economic assumption
   paramlist$infl <- 0.03
@@ -175,15 +182,15 @@ for(runName in runList$runname ){
   
   
 
-  # if(paramlist$tier == "sumTiers"){
-  #   source("NCTSERS_0_Master_allTiers.R")
-  #   save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, "_", runName, ".RData"))
-  # 
-  # } else {
-  #   Tier_select <- paramlist$tier
-  #   source("NCTSERS_0_Master_singleTier.R")
-  #   save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, runName, ".RData"))
-  # }
+  if(paramlist$tier == "sumTiers"){
+    source("NCTSERS_0_Master_allTiers.R")
+    save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, "_", runName, ".RData"))
+
+  } else {
+    Tier_select <- paramlist$tier
+    source("NCTSERS_0_Master_singleTier.R")
+    save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, runName, ".RData"))
+  }
 
 }
 
