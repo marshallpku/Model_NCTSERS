@@ -26,6 +26,10 @@ init_beneficiaries_all %<>% mutate(nbeneficiaries = 0)
 init_terms_all %<>% mutate(nterms = 0)
 init_disb_all %<>% mutate(ndisb = 0) 
 
+init_actives_all %<>% mutate(nactives = ifelse(ea == 30 & age == 30, nactives, 0) ) 
+
+#init_actives_all %>% filter(ea == 30)
+
 ## Exclude initial terms with ea < 20: Data_population, line 504 
 # init_terminated_all %<>% filter(age.term >= Global_paramlist$min.ea,
 #                                 ea >= Global_paramlist$min.ea)
@@ -36,10 +40,11 @@ init_disb_all %<>% mutate(ndisb = 0)
 
 
 
+
 init_beneficiaries_all %<>% filter(age >= 25) 
 
-paramlist$pct.ca.M <- 0# 0.4 # proportion of males who opt for ca upon retirement
-paramlist$pct.ca.F <- 0# 0.4
+# paramlist$pct.ca.M <- 1# 0.4 # proportion of males who opt for ca upon retirement
+# paramlist$pct.ca.F <- 1# 0.4
 
 pct.init.ret.ca <- 0  # 0.4
 pct.init.ret.la  <- 1 - pct.init.ret.ca
@@ -101,8 +106,8 @@ salary        <- get_salary_proc(Tier_select)
 benefit       <- get_benefit_tier(Tier_select)
 benefit.disb  <- get_benefit.disb_tier(Tier_select)
 init_pop      <- get_initPop_tier(Tier_select)
-entrants_dist <- get_entrantsDist_tier(Tier_select)
-
+# entrants_dist <- get_entrantsDist_tier(Tier_select)
+entrants_dist <- numeric(length(paramlist$range_ea))
 
 #*********************************************************************************************************
 # 2. Demographics ####
@@ -145,8 +150,22 @@ gc()
 
 liab <- get_indivLab(Tier_select)
 
-
-
+# term.backup <- liab$term
+# termpop.backup <- pop$term
+# actpop.backup <- pop$active
+# 
+# 
+# #  liab$term %<>% mutate(B.v = ifelse(start.year)) 
+# pop$active %<>% mutate(start.year = year - (age - ea),
+#                        number.a = ifelse(start.year >= 2016, 0, number.a)
+#                        )
+# 
+# pop$term %<>% mutate(start.year = year - (age - ea),
+#                      number.a = ifelse(start.year >= 2016, 0, number.v)
+# )
+# 
+# 
+# pop$term %>% head
 
 
 #*********************************************************************************************************
@@ -171,7 +190,6 @@ penSim_results <- run_sim(Tier_select, AggLiab)
 
 
 
-init_beneficiaries_all
 #*********************************************************************************************************
 # 7.  Saving results ####
 #*********************************************************************************************************
@@ -188,7 +206,7 @@ outputs_list <- list(paramlist = paramlist,
 
 
 var_display1 <- c("Tier", "sim", "year", "FR_MA", "MA", "AL", 
-                  "AL.act", "AL.act.laca",  "AL.act.v", "AL.la", "AL.ca", "AL.term", "PVFB", "B",
+                  "AL.act", "AL.act.laca",  "AL.act.v", "AL.la", "AL.ca", "AL.term", "PVFB", "B", "PVFNC",
                   # "AL.disb.la", "AL.disb.ca", "AL.death", "PVFB",
                   #"PVFB.laca", "PVFB.LSC", "PVFB.v", "PVFB", 
                   # "B", "B.la", "B.ca", "B.v", "B.disb.la","B.disb.ca", 
@@ -201,11 +219,11 @@ var_display2 <- c("Tier", "sim", "year", "FR_MA", "MA", "AL", "EEC","ERC","ERC_P
 
 var_display.cali <- c("runname", "sim", "year", "FR","FR_MA", "MA", "AA", "AL", 
                       "AL.act", "AL.disb.la", "AL.term",
-                      "PVFB", 
+                      "PVFB", "PVFNC", 
                       "B", # "B.la", "B.ca", "B.disb.la","B.disb.ca", 
                       # "C",   
                       "NC","SC", "ERC", "EEC",
-                      "PR", "nactives", "nla",
+                      "PR", "nactives", "nterms",
                       "NC_PR", "SC_PR", # "ERC_PR",
                       "UAAL")
 

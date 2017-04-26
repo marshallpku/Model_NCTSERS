@@ -99,8 +99,6 @@ mortality.model <- data.frame(age = range_age) %>%
                     qxm.deathBen)
         
          
-         
-  
 ## Compute present values of life annuity(with cola) at each retirement age in each year, using uni-sex mortality with age dependent weights
   # Why using age dependent weights:
     # Using the age dependent weights, the number of total members calculated using aggregate members and weighted mortality would be the same
@@ -240,6 +238,9 @@ termrates.model <-
   select(ea, age, qxt)
         
 termrates.model 
+
+termrates.model
+
 
 #*************************************************************************************************************
 #                                Prepare retirement rates rates for NCTSERS                     #####                  

@@ -154,7 +154,7 @@ liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) ,
   )
 
 
-liab.active %>% select(ea, age, ax.disb.la, ax.vben)
+# liab.active %>% select(ea, age, ax.disb.la, ax.vben)
 
 
 
@@ -171,7 +171,7 @@ liab.active %<>%
     gx.laca = ifelse(elig_retFull == 1, 1,
                     ifelse(elig_retFull == 0 & elig_retReduced1 == 1, (1 - 0.03 * (65 - age)),
                     ifelse(elig_retFull == 0 & elig_retReduced1 == 0 & elig_retReduced1 == 1, 1 - reduction2, 0 ))),
-          # gx.laca = 0,
+    gx.laca = 0,
   Bx.laca  = gx.laca * Bx,  # This is the benefit level if the employee starts to CLAIM benefit at age x, not internally retire at age x. 
   TCx.la   = lead(Bx.laca) * qxr.la * lead(ax.r.W) * v,         # term cost of life annuity at the internal retirement age x (start to claim benefit at age x + 1)
   TCx.ca   = lead(Bx.laca) * qxr.ca * lead(liab.ca.sum.1) * v,  # term cost of contingent annuity at the internal retirement age x (start to claim benefit at age x + 1)
@@ -199,6 +199,18 @@ liab.active %<>%
   PVFNC.EAN.CP.laca = NCx.EAN.CP.laca * axRs,
   ALx.EAN.CP.laca   = PVFBx.laca - PVFNC.EAN.CP.laca
   ) 
+
+
+# x <- liab.active %>%
+#   select(start.year, year, age, ea, NCx.EAN.CP.laca, PVFNC.EAN.CP.laca, ALx.EAN.CP.laca, PVFBx.laca, TCx.ca, TCx.la,TCx.laca,Bx.laca, liab.ca.sum.1)
+# 
+# x %>% filter(start.year == 2016, ea == 29)
+# 
+# # 
+# # liab.ca_ %>% filter(age == age.r, year == 2047, age == 60)
+# # 
+# # 
+# # liab.ca_ %>% filter(year == 2047, ) %>% arrange()
 
 
 
@@ -310,7 +322,7 @@ liab.active %<>%
   mutate(gx.v = ifelse(elig_vest == 1, 1, 0),  # actives become vested after reaching v.yos years of yos
          
          Bx.v = ifelse(ea < r.vben, 
-                       gx.v * bfactor * yos * fas * 0.85 * 0, 0), # initial annuity amount when the vested term retires at age r.vben, when a employee is vested at a certain age.
+                       gx.v * bfactor * yos * fas * 0.85, 0), # initial annuity amount when the vested term retires at age r.vben, when a employee is vested at a certain age.
          
          TCx.v   = ifelse(ea < r.vben, Bx.v * qxt * lead(px_r.vben_m) * v^(r.vben - age) * ax.r.W[age == r.vben], 0),             # term cost of vested termination benefits. We assume term rates are 0 after r.vben.
          PVFBx.v = ifelse(ea < r.vben, c(get_PVFB(pxT[age < r.vben], v, TCx.v[age < r.vben]), rep(0, max.age - r.vben + 1)), 0),  # To be compatible with the cases where workers enter after age r.min, r.max is used instead of r.min, which is used in textbook formula(winklevoss p115).
@@ -326,7 +338,8 @@ liab.active %<>%
          
          # NC and AL of EAN.CP
          NCx.EAN.CP.v = ifelse(age < r.vben, PVFBx.v[age == min(age)]/(sx[age == min(age)] * ayxs[age == r.vben]) * sx, 0),  # for testing spreading NC.v up to r.vben
-         ALx.EAN.CP.v = PVFBx.v - NCx.EAN.CP.v * axrs
+         PVFNC.EAN.CP.v = NCx.EAN.CP.v * axrs,
+         ALx.EAN.CP.v = PVFBx.v - PVFNC.EAN.CP.v
   ) 
   
 # x <- liab.active %>% filter(start.year == 1, ea == 20)
@@ -688,32 +701,37 @@ liab.disb.la %<>% as.data.frame  %>%
 liab.active %<>% ungroup %>% select(start.year, year, ea, age, everything())
 
 
-ALx.laca.method   <- paste0("ALx.", actuarial_method, ".laca")
-NCx.laca.method   <- paste0("NCx.", actuarial_method, ".laca")
+ALx.laca.method     <- paste0("ALx.", actuarial_method, ".laca")
+NCx.laca.method     <- paste0("NCx.", actuarial_method, ".laca")
+PVFNC.laca.method   <- paste0("PVFNC.", actuarial_method, ".laca")
 
 ALx.death.method   <- paste0("ALx.", actuarial_method, ".death")
 NCx.death.method   <- paste0("NCx.", actuarial_method, ".death")
-
-ALx.disb.method   <- paste0("ALx.", actuarial_method, ".disb")
-NCx.disb.method   <- paste0("NCx.", actuarial_method, ".disb")
-
-ALx.v.method <- paste0("ALx.", actuarial_method, ".v")
-NCx.v.method <- paste0("NCx.", actuarial_method, ".v")
+PVFNC.death.method <- paste0("PVFNC.", actuarial_method, ".death")
 
 
+ALx.disb.method     <- paste0("ALx.", actuarial_method, ".disb")
+NCx.disb.method     <- paste0("NCx.", actuarial_method, ".disb")
+PVFNC.disb.method   <- paste0("PVFNC.", actuarial_method, ".disb")
 
-var.names <- c("sx", ALx.laca.method, NCx.laca.method, 
-                     ALx.v.method, NCx.v.method, 
-                     ALx.death.method, NCx.death.method,
-                     ALx.disb.method, NCx.disb.method,
-                     "PVFBx.laca", "PVFBx.v", "PVFBx.death", "PVFBx.disb", "Bx.laca", "Bx.disb")
+ALx.v.method    <- paste0("ALx.", actuarial_method, ".v")
+NCx.v.method    <- paste0("NCx.", actuarial_method, ".v")
+PVFNC.v.method  <- paste0("PVFNC.", actuarial_method, ".v")
+
+
+var.names <- c("sx", ALx.laca.method,  NCx.laca.method,  PVFNC.laca.method,
+                     ALx.v.method,     NCx.v.method,     PVFNC.v.method,
+                     ALx.death.method, NCx.death.method, PVFNC.death.method,
+                     ALx.disb.method,  NCx.disb.method,  PVFNC.disb.method,
+                     "PVFBx.laca", "PVFBx.v", "PVFBx.death", "PVFBx.disb", "Bx.laca", "Bx.disb", "Bx")
 liab.active %<>% 
   filter(year %in% seq(init.year, len = nyear)) %>%
   select(year, ea, age, one_of(var.names)) %>%
-  rename_("ALx.laca"   = ALx.laca.method,  "NCx.laca"   = NCx.laca.method, 
-          "ALx.v"      = ALx.v.method,     "NCx.v"      = NCx.v.method,
-          "ALx.death"  = ALx.death.method, "NCx.death"  = NCx.death.method,
-          "ALx.disb"   = ALx.disb.method,  "NCx.disb"   = NCx.disb.method
+  rename_("ALx.laca"   = ALx.laca.method,  "NCx.laca"   = NCx.laca.method,  "PVFNC.laca"   = PVFNC.laca.method, 
+          "ALx.v"      = ALx.v.method,     "NCx.v"      = NCx.v.method,     "PVFNC.v"      = PVFNC.v.method,
+          "ALx.death"  = ALx.death.method, "NCx.death"  = NCx.death.method, "PVFNC.death"  = PVFNC.death.method,
+          "ALx.disb"   = ALx.disb.method,  "NCx.disb"   = NCx.disb.method,  "PVFNC.disb"   = PVFNC.disb.method
+          
            )   # Note that dplyr::rename_ is used. 
 
 

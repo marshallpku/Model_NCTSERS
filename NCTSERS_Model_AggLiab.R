@@ -103,6 +103,12 @@ get_AggLiab <- function( Tier_select_,
            PVFBx.disb.tot  = PVFBx.disb * number.a,
            PVFBx.av.tot    = PVFBx.laca.tot + PVFBx.v.tot + PVFBx.death.tot + PVFBx.disb.tot,
            
+           PVFNC.laca.tot  = PVFNC.laca * number.a,
+           PVFNC.v.tot     = PVFNC.v    * number.a,
+           PVFNC.death.tot = PVFNC.death * number.a,
+           PVFNC.disb.tot  = PVFNC.disb * number.a,
+           PVFNC.av.tot    = PVFNC.laca.tot + PVFNC.v.tot + PVFNC.death.tot + PVFNC.disb.tot,
+           
            PR.tot  = sx * number.a,
            
            runname = runname)
@@ -128,6 +134,12 @@ get_AggLiab <- function( Tier_select_,
       PVFBx.disb.sum = sum(PVFBx.disb.tot, na.rm = TRUE),
       PVFBx.av.sum   = sum(PVFBx.av.tot,   na.rm = TRUE),
       
+      PVFNC.laca.sum = sum(PVFNC.laca.tot, na.rm = TRUE),
+      PVFNC.v.sum    = sum(PVFNC.v.tot,    na.rm = TRUE),
+      PVFNC.death.sum= sum(PVFNC.death.tot,na.rm = TRUE),
+      PVFNC.disb.sum = sum(PVFNC.disb.tot, na.rm = TRUE),
+      PVFNC.av.sum   = sum(PVFNC.av.tot,   na.rm = TRUE),
+      
       PR.sum    = sum(PR.tot,  na.rm = TRUE),
       
       nactives  = sum(number.a,  na.rm = TRUE)) %>% 
@@ -137,7 +149,14 @@ get_AggLiab <- function( Tier_select_,
       as.matrix # extracting elements from matrices is much faster than from data.frame
   
   
-   active.agg %>% as.data.frame()
+   # active.agg %>% as.data.frame()
+   
+   
+   # x <- liab_$active %>% mutate(start.year = year - (age - ea)) %>% 
+   #   select(start.year, year, age, ea, number.a, ALx.laca, NCx.laca, Bx.laca, sx, PR.tot, Bx, ax.r.W, gx.laca)
+   #   
+   # x %>% filter(start.year == 2016, ea == 25)
+   #    
    
    
   #*************************************************************************************************************

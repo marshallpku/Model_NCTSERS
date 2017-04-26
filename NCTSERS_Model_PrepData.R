@@ -478,10 +478,10 @@ get_entrantsDist_tier <- function(Tier_select_, grouping_ =  paramlist$Grouping)
   get_entrantsDist(init_actives)
 }
 
-
-get_benefit_tier("t1")
-get_initPop_tier("t1")
-get_entrantsDist_tier("t1")
+# 
+# get_benefit_tier("t1")
+# get_initPop_tier("t1")
+# get_entrantsDist_tier("t1")
 
 
 

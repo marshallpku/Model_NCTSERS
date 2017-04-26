@@ -121,18 +121,26 @@ get_liab.ben <- function(gender.R,
        expand.grid(start.year = unique(mortality$start.year),  
                   age = (min(range_age.post) - 3):max(range_age_)) %>%
        left_join(mortality %>% ungroup %>% filter(ea == min(ea)) %>%
-                 select(start.year, year, age, qxm.post.male = qxm.post.sur.male, qxm.post.female = qxm.post.sur.female)) %>%
+                 select(start.year, year, age, 
+                        qxm.post.male,  qxm.post.female,
+                        qxm.post.sur.male, qxm.post.sur.female  # For NCTSERS, mortality for beneficiaries is given
+                        )) %>%
        group_by(start.year) %>% 
        # This part is for disability benefit
        mutate(qxm.post.male   = ifelse(age < min(range_age.r_), qxm.post.male[age == min(range_age.r_)],   qxm.post.male),
               qxm.post.female = ifelse(age < min(range_age.r_), qxm.post.female[age == min(range_age.r_)], qxm.post.female),
+              
+              qxm.post.sur.male   = ifelse(age < min(range_age.r_), qxm.post.sur.male[age == min(range_age.r_)],   qxm.post.sur.male),
+              qxm.post.sur.female = ifelse(age < min(range_age.r_), qxm.post.sur.female[age == min(range_age.r_)], qxm.post.sur.female),
+              
               year = ifelse(age < min(range_age.r_), year[age == min(range_age.r)] - ( min(range_age.r_) - age)  , year)
               ) %>% 
        arrange(start.year, age)
   
   
   
-  df <- expand.grid(year.r = init.year:(init.year + nyear - 1),  age = (min(range_age.post) - 3):max(range_age_), age.r = range_age.r_) %>% 
+  df <- expand.grid(year.r = init.year:(init.year + nyear - 1 + r.max - min.age),  age = (min(range_age.post) - 3):max(range_age_), age.r = range_age.r_) %>% 
+        # note for year.r with generatioanl mortality table: must cover up to the max possible retirement year for age 20-year entrant who entered the workforece in the last simulatoin year.  
     mutate(year = year.r + age - age.r ) %>% 
     left_join(mortality) %>%
     left_join(reduction.factor) %>% 
@@ -141,7 +149,9 @@ get_liab.ben <- function(gender.R,
       gender.R = gender.R,
       age.S = ifelse(gender.R == "M", age - 3, age + 3),
       qxm.R = ifelse(gender.R == "M", qxm.post.male, qxm.post.female),
-      qxm.S = ifelse(gender.R == "M", lag(qxm.post.male, 3), lead(qxm.post.female, 3)),
+      # qxm.S = ifelse(gender.R == "M", lag(qxm.post.male, 3), lead(qxm.post.female, 3)),
+      # for NCTSERS: 
+      qxm.S = ifelse(gender.R == "M", lag(qxm.post.sur.male, 3), lead(qxm.post.sur.female, 3)),
       qxm.S = ifelse(gender.R == "M",
                             ifelse(age == max(age), 1, qxm.S), # For convenience, it is assumed that the max age for the female spouses is 117.)
                             ifelse(age.S > max(range_age.post), 1, qxm.S)
