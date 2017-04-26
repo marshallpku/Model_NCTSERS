@@ -331,7 +331,7 @@ decrement.model
 
 
 decrement.model %<>% 
-  group_by(start.year, ea) %>% 
+  # group_by(start.year, ea) %>% 
   mutate(# Early retirement
          elig_retFull = ifelse((age >= 65 & yos >= 5)| 
                                (age >= 60 & yos >= 25)| 
@@ -375,7 +375,8 @@ pct.ca <- pct.ca.M * occupGender["actives", "pct.male.all"] + pct.ca.F * occupGe
 pct.la <- 1 - pct.ca
 
 
-decrement.model %<>% group_by(ea) %>%  
+decrement.model %<>% 
+  # group_by(start.year, ea) %>%  
   mutate(qxr = ifelse(age == r.max - 1,
                              1 - qxt - qxm.pre - qxd, 
                              lead(qxr) * (1 - qxt - qxm.pre - qxd)), # Total probability of retirement
@@ -402,7 +403,7 @@ decrement.model %<>% group_by(ea) %>%
 
 
 decrement.model %<>% 
-  group_by(ea) %>% 
+  #group_by(start.year, ea) %>% 
   mutate( pxm.pre = 1 - qxm.pre,
           pxm.deathBen = 1 - qxm.deathBen,
           pxm.d        = 1 - qxm.d,
@@ -412,13 +413,14 @@ decrement.model %<>%
           
           pxRm        = order_by(-age, cumprod(ifelse(age >= r.max, 1, pxm.pre))), # prob of surviving up to r.max, mortality only
           px_r.full_m = order_by(-age, cumprod(ifelse(age >= r.vben, 1, pxm.pre))), # Should be deleted later
-          px_r.vben_m = order_by(-age, cumprod(ifelse(age >= r.vben, 1, pxm.pre))),
+          px_r.vben_m = order_by(-age, cumprod(ifelse(age >= r.vben, 1, pxm.term))),
           px_r.vsuper_m = order_by(-age, cumprod(ifelse(age >= r.vben, 1, pxm.pre))) # order_by(-age, cumprod(ifelse(age >= age_superFirst, 1, pxm.pre)))
           
           # px65T = order_by(-age, cumprod(ifelse(age >= r.max, 1, pxT))), # prob of surviving up to r.max, composite rate
           # p65xm = cumprod(ifelse(age <= r.max, 1, lag(pxm))))            # prob of surviving to x from r.max, mortality only
   ) %>% 
-  mutate_each(funs(na2zero))
+  mutate_each(funs(na2zero)) %>% 
+  ungroup
 
 
 list(decrement.model = decrement.model,

@@ -130,9 +130,6 @@ make_dmat <- function(qx, df = decrement_wf) {
   return(df)
 }
 
-# # Generational transition matrics (decrement rates differ from year to year. )
-# make_dmat.Gen <- 
-
 
 # The transition matrices are defined below. The probabilities (eg. qxr for retirement) of flowing
 # from the current status to the target status for a cell(age and ea combo) are given in the corresponding
@@ -148,7 +145,6 @@ p_active2retiree <- make_dmat("qxr",    decrement_wf_nonGen)
 p_active2la      <- make_dmat("qxr.la", decrement_wf_nonGen)
 
 # decrement_wf_Gen %>% filter(year == 2016) %>% ungroup() %>%  arrange(ea, age) %>% make_dmat("qxm.pre", .)
-
 
 
 

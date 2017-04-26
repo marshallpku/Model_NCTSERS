@@ -20,13 +20,13 @@ load("Data_inputs/NCTSERS_MemberData_AV2015.RData")  # for all tiers
 #**********************************************
 
 ## Exclude selected type(s) of initial members
-#init_actives_all %<>% mutate(nactives = 0) 
-init_retirees_all %<>% mutate(nretirees = 0)
-init_beneficiaries_all %<>% mutate(nbeneficiaries = 0)
-init_terms_all %<>% mutate(nterms = 0)
-init_disb_all %<>% mutate(ndisb = 0) 
+# init_actives_all %<>% mutate(nactives = 0) 
+# init_retirees_all %<>% mutate(nretirees = 0)
+# init_beneficiaries_all %<>% mutate(nbeneficiaries = 0)
+# init_terms_all %<>% mutate(nterms = 0)
+# init_disb_all %<>% mutate(ndisb = 0)
 
-init_actives_all %<>% mutate(nactives = ifelse(ea == 30 & age == 30, nactives, 0) ) 
+# init_actives_all %<>% mutate(nactives = ifelse(ea == 30 & age == 30, nactives, 0) ) 
 
 #init_actives_all %>% filter(ea == 30)
 
@@ -106,8 +106,8 @@ salary        <- get_salary_proc(Tier_select)
 benefit       <- get_benefit_tier(Tier_select)
 benefit.disb  <- get_benefit.disb_tier(Tier_select)
 init_pop      <- get_initPop_tier(Tier_select)
-# entrants_dist <- get_entrantsDist_tier(Tier_select)
-entrants_dist <- numeric(length(paramlist$range_ea))
+entrants_dist <- get_entrantsDist_tier(Tier_select)
+#entrants_dist <- numeric(length(paramlist$range_ea))
 
 #*********************************************************************************************************
 # 2. Demographics ####
@@ -235,8 +235,11 @@ penSim_results %>% filter(sim == -1) %>% select(one_of(var_display2)) %>% print
 
 
 # Calibration
-penSim_results %>% filter(sim == -1) %>% select(one_of(var_display.cali)) %>% print
+penSim_results %>% filter(sim == -1) %>% select(one_of(var_display.cali)) %>% mutate(AL1 = lag(AL + NC - B) * 1.075 )    %>% print
 penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display.cali)) %>% print
+
+
+penSim_results %>% filter(sim == -1) %>% select(one_of(var_display.cali)) %>% mutate(AL1 = lag(AL + NC - B) * 1.0725 ) %>% select(runname, sim, year, FR, AA, AL, AL1)
 
 
 

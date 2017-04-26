@@ -171,7 +171,7 @@ liab.active %<>%
     gx.laca = ifelse(elig_retFull == 1, 1,
                     ifelse(elig_retFull == 0 & elig_retReduced1 == 1, (1 - 0.03 * (65 - age)),
                     ifelse(elig_retFull == 0 & elig_retReduced1 == 0 & elig_retReduced1 == 1, 1 - reduction2, 0 ))),
-    gx.laca = 0,
+    # gx.laca = 0,
   Bx.laca  = gx.laca * Bx,  # This is the benefit level if the employee starts to CLAIM benefit at age x, not internally retire at age x. 
   TCx.la   = lead(Bx.laca) * qxr.la * lead(ax.r.W) * v,         # term cost of life annuity at the internal retirement age x (start to claim benefit at age x + 1)
   TCx.ca   = lead(Bx.laca) * qxr.ca * lead(liab.ca.sum.1) * v,  # term cost of contingent annuity at the internal retirement age x (start to claim benefit at age x + 1)
@@ -324,7 +324,9 @@ liab.active %<>%
          Bx.v = ifelse(ea < r.vben, 
                        gx.v * bfactor * yos * fas * 0.85, 0), # initial annuity amount when the vested term retires at age r.vben, when a employee is vested at a certain age.
          
-         TCx.v   = ifelse(ea < r.vben, Bx.v * qxt * lead(px_r.vben_m) * v^(r.vben - age) * ax.r.W[age == r.vben], 0),             # term cost of vested termination benefits. We assume term rates are 0 after r.vben.
+         #TCx.v   = ifelse(ea < r.vben, Bx.v * qxt * lead(px_r.vben_m) * v^(r.vben - age) * ax.r.W[age == r.vben], 0),             # term cost of vested termination benefits. We assume term rates are 0 after r.vben.
+         TCx.v   = ifelse(ea < r.vben, qxt * lead(px_r.vben_m) * (Bx.v * ax.vben[age == r.vben]) *  v^(r.vben - age) , 0),             # term cost of vested termination benefits. We assume term rates are 0 after r.vben.
+         
          PVFBx.v = ifelse(ea < r.vben, c(get_PVFB(pxT[age < r.vben], v, TCx.v[age < r.vben]), rep(0, max.age - r.vben + 1)), 0),  # To be compatible with the cases where workers enter after age r.min, r.max is used instead of r.min, which is used in textbook formula(winklevoss p115).
          
          # # NC and AL of PUC
@@ -377,7 +379,6 @@ liab.term.init <- expand.grid(age.term = unique(init_terminated_$age.term),
          age.term >= ea) %>%
   left_join(init_terminated_ %>% select(age.term, age, benefit.term = benefit)) %>%
   left_join(select(liab.active, start.year, ea, age, COLA.scale, pxRm, px_r.vben_m, ax.vben)) %>%
-  # left_join(mortality.post.model_ %>% filter(age.r == r.vben) %>% select(age, ax.r.W.term = ax.r.W)) %>%
   left_join(decrement.model_ %>% select(start.year, ea, age, pxm.term)) %>% 
   group_by(start.year, ea, age.term) %>%
 
@@ -392,7 +393,7 @@ liab.term.init <- expand.grid(age.term = unique(init_terminated_$age.term),
     
     Bx.v  = benefit.term,
     
-    B.v   = ifelse(age.ben > r.vben, 0,    ifelse(age >= r.vben, Bx.v[age == unique(age.term) + 1]  * COLA.scale/COLA.scale[age == r.vben], 0)),  # Benefit payment after r.vben, for age.ben == r.vben
+    B.v   = ifelse(age.ben > r.vben, 0,    ifelse(age >= r.vben, Bx.v[age == unique(age.term) + 1]  * COLA.scale/COLA.scale[age == r.vben],  0)), # Benefit payment after r.vben, for age.ben == r.vben
     B.v   = ifelse(age.ben == r.vben, B.v, ifelse(age >= age.ben, Bx.v[age == unique(age.term) + 1] * COLA.scale/COLA.scale[age == age.ben], 0)), # for age.ben > r.vben
     ALx.v = ifelse(age <  r.vben, Bx.v[age == unique(age.term) + 1] * ax.vben[age == r.vben] * px_r.vben_m * v^(r.vben - age), # liab before receiving benefits
                    B.v * ax.vben)
@@ -401,9 +402,6 @@ liab.term.init <- expand.grid(age.term = unique(init_terminated_$age.term),
   select(ea, age, start.year, year, year.term, B.v, ALx.v, ax.vben, pxm.term) %>%
   filter(year %in% seq(init.year, len = nyear),
          year.term == init.year - 1)
-
-# x <- liab.term.init %>% arrange(start.year, age)
-# liab.term.init %>% filter(start.year == 2007, ea == 55, age.term == 63) %>% data.frame()
 
 
 
@@ -421,9 +419,9 @@ liab.term <- expand.grid(# start.year   = (init.year - (r.vben - 1 - min.age)):(
 
 
 liab.term <- merge(liab.term,
-                   select(liab.active, start.year, year, ea, age, Bx.v, COLA.scale, pxRm, px_r.vben_m, px_r.vsuper_m, ax.vben, pxm.term) %>% data.table(key = "ea,age,start.year"),
+                   select(liab.active, start.year, year, ea, age, Bx.v, COLA.scale, pxRm, px_r.vben_m, ax.vben, pxm.term) %>% data.table(key = "ea,age,start.year"),
                    all.x = TRUE, by = c("ea", "age","start.year")) %>% as.data.frame
-             # left_join(mortality.post.model_ %>% filter(age.r == r.vben) %>% select(age, ax.r.W.term = ax.r.W))   # load present value of annuity for retirement age r.vben
+
 
 liab.term %<>% as.data.frame %>%
   group_by(start.year, ea, age.term) %>%
@@ -441,13 +439,17 @@ liab.term %<>% as.data.frame %>%
   ungroup  %>%
   # select(#-start.year, -age.term,
   #        -Bx.v, -ax.r.W, -COLA.scale, -pxRm) %>%
-  select(ea, age, start.year, year, year.term, B.v, ALx.v) %>%
+  select(ea, age, start.year, year, year.term, B.v, ALx.v, ax.vben) %>%
   # select(-age.term, -Bx.v, -ax.r.W.term, -COLA.scale, -pxRm, - px_r.vben_m, -age.r, -px_r.vsuper_m, -ax.vben, -pxm.term) %>%
   filter(year %in% seq(init.year, len = nyear)) 
 
 
 # liab.term %<>% mutate(B.v   = ifelse(year.term == init.year - 1, 0, B.v),
 #                       ALx.v = ifelse(year.term == init.year - 1, 0, ALx.v))
+
+# liab.term %>% filter(start.year ==2016, ea == 30, year.term == 2025) %>% 
+#   select(start.year, ea, year.term, age, year, B.v, ALx.v, ax.vben,  px_r.vben_m, pxm.term)
+
 
 
 liab.term <-  bind_rows(list(liab.term.init,                                  # Using rbind produces duplicated rows with unknown reasons. Use bind_rows from dplyr instead.
