@@ -148,7 +148,11 @@ mortality <-
          qxm.pre.law.female
          )
 
-mortality 
+# Ensure mortality rate is 1 at age 120
+mortality  %<>% mutate_at(vars(-age, -year), funs(ifelse(age == 120, 1, .) ))
+mortality  %<>% mutate_at(vars(-age, -year), funs(ifelse(. > 1, 1, .)))
+
+
 
 
 #*********************************************************************************************************

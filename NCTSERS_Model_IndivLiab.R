@@ -77,7 +77,7 @@ v.yos    <- tier.param[Tier_select_, "v.yos"]
 
 init_terminated_ <-  get_tierData(init_terms_all_, Tier_select_)
 
-init_terminated_ %<>% mutate(benefit = 0.75 * termCon) 
+init_terminated_ %<>% mutate(benefit = 0.75 * 0.42 * termCon) 
   
 #*************************************************************************************************************
 #                               1. Preparation                        #####                  
@@ -98,26 +98,19 @@ min.year <- min(init.year - (max.age - (r.max - 1)),
 liab.active <- expand.grid(start.year = min.year:(init.year + nyear - 1) , 
                            ea = range_ea, age = range_age) %>%
   filter(start.year + max.age - ea >= init.year, age >= ea) %>%  # drop redundant combinations of start.year and ea. (delet those who never reach year 1.) 
-  mutate(year = start.year + age - ea) %>%  # year index in the simulation)
+  mutate(year = start.year + age - ea) %>%                       # year index in the simulation)
   arrange(start.year, ea, age) %>% 
   left_join(salary_) %>%
-# left_join(.benefit) %>% # must make sure the smallest age in the retirement benefit table is smaller than the single retirement age. (smaller than r.min with multiple retirement ages)
   left_join(decrement.model_) %>% 
   left_join(mortality.post.model_ %>% filter(age == age.r) %>% ungroup %>% select(year, age, ax.r.W)) %>%
   left_join(liab.ca_      %>% filter(age == age.r)    %>% ungroup %>% select(year, age, liab.ca.sum.1)) %>% 
   left_join(liab.disb.ca_ %>% filter(age == age.disb) %>% ungroup %>% select(year, age, liab.disb.ca.sum.1 = liab.ca.sum.1)) %>% 
   group_by(start.year, ea) %>%
   
-  # filter(start.year == 2015, ea == 73) %>% 
   
   # Calculate salary and benefits
   mutate(
     yos= age - ea,
-    
-    # # PSERS: DC contribution 
-    # DC_rate.tot = ifelse(Tier_select_ == "tCD", 0, DC_rate.tot),
-    # DC_EEC      = sx * EEC_DC.rate,
-    # DC_ERC      = sx * max(0, (DC_rate.tot - EEC_DC.rate)),
     
     # years of service
     Sx = ifelse(age == min(age), 0, lag(cumsum(sx))),  # Cumulative salary
@@ -179,6 +172,7 @@ liab.active %<>%
   
   # TCx.r = Bx.r * qxr.a * ax,
   PVFBx.laca  = c(get_PVFB(pxT[age <= r.max], v, TCx.laca[age <= r.max]), rep(0, max.age - r.max)),
+  PVFSx       = c(get_PVFB(pxT[age <= r.max], v, sx[age <= r.max]), rep(0, max.age - r.max)),
   
   ## NC and AL of UC
   # TCx.r1 = gx.r * qxe * ax,  # term cost of $1's benefit
@@ -725,7 +719,7 @@ var.names <- c("sx", ALx.laca.method,  NCx.laca.method,  PVFNC.laca.method,
                      ALx.v.method,     NCx.v.method,     PVFNC.v.method,
                      ALx.death.method, NCx.death.method, PVFNC.death.method,
                      ALx.disb.method,  NCx.disb.method,  PVFNC.disb.method,
-                     "PVFBx.laca", "PVFBx.v", "PVFBx.death", "PVFBx.disb", "Bx.laca", "Bx.disb", "Bx")
+                     "PVFBx.laca", "PVFBx.v", "PVFBx.death", "PVFBx.disb", "Bx.laca", "Bx.disb", "Bx", "PVFSx")
 liab.active %<>% 
   filter(year %in% seq(init.year, len = nyear)) %>%
   select(year, ea, age, one_of(var.names)) %>%

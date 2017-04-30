@@ -69,8 +69,21 @@ source("Functions.R")
 
 
 # To Do
-
 # get_init.benefitFirstYear.term
+
+##  Calibration
+
+# 1. Benefit for initial terms 
+
+# 2. Liabilities for retirees, disabled, and beneficiaries. 
+
+# 3. Liabilities and normal costs for actives
+  # Issues: Liabilities and normal costs are too low 
+  # Possible calibrating factors:
+   # benefit factor: 
+   # payroll growth: is assumed payroll growth too low? But the effect of payroll growth on NC rate is uncertain. 
+
+
 
 
 #### Model Parameters ####
@@ -182,17 +195,33 @@ for(runName in runList$runname ){
   
   
 
-  # if(paramlist$tier == "sumTiers"){
-  #   source("NCTSERS_0_Master_allTiers.R")
-  #   save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, "_", runName, ".RData"))
-  # 
-  # } else {
-  #   Tier_select <- paramlist$tier
-  #   source("NCTSERS_0_Master_singleTier.R")
-  #   save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, runName, ".RData"))
-  # }
+  if(paramlist$tier == "sumTiers"){
+    source("NCTSERS_0_Master_allTiers.R")
+    save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, "_", runName, ".RData"))
+
+  } else {
+    Tier_select <- paramlist$tier
+    source("NCTSERS_0_Master_singleTier.R")
+    save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, runName, ".RData"))
+  }
 
 }
+
+
+  
+
+
+  
+  
+  
+  
+  
+  
+
+
+
+
+
 
 
 

@@ -185,6 +185,9 @@ run_sim <- function(Tier_select_,
   penSim0$PVFNC.disb <- AggLiab_$active[, "PVFNC.disb.sum"] 
   penSim0$PVFNC      <-  with(penSim0, PVFNC.laca + PVFNC.v + PVFNC.death + PVFNC.disb) #Note this is the total PVFNC for actives. PVFNC for retirees/beneficiaries are the same as AL.
   
+  # PVFS(j)
+  penSim0$PVFS <- AggLiab_$active[, "PVFSx.sum"] 
+  
   # B(j)
   penSim0$B.la    <- AggLiab_$la[, "B.la.sum"]
   penSim0$B.ca    <- AggLiab_$ca[, "B.ca.sum"]

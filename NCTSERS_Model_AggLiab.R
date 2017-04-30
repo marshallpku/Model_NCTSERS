@@ -109,6 +109,8 @@ get_AggLiab <- function( Tier_select_,
            PVFNC.disb.tot  = PVFNC.disb * number.a,
            PVFNC.av.tot    = PVFNC.laca.tot + PVFNC.v.tot + PVFNC.death.tot + PVFNC.disb.tot,
            
+           PVFSx.tot = PVFSx * number.a,
+           
            PR.tot  = sx * number.a,
            
            runname = runname)
@@ -139,6 +141,8 @@ get_AggLiab <- function( Tier_select_,
       PVFNC.death.sum= sum(PVFNC.death.tot,na.rm = TRUE),
       PVFNC.disb.sum = sum(PVFNC.disb.tot, na.rm = TRUE),
       PVFNC.av.sum   = sum(PVFNC.av.tot,   na.rm = TRUE),
+      
+      PVFSx.sum =  sum(PVFSx.tot, na.rm = TRUE),
       
       PR.sum    = sum(PR.tot,  na.rm = TRUE),
       

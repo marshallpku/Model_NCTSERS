@@ -15,6 +15,23 @@ load("Data_inputs/NCTSERS_PlanInfo_AV2015.RData")    # for all tiers
 load("Data_inputs/NCTSERS_MemberData_AV2015.RData")  # for all tiers
            
 
+
+
+#**********************************************
+##              Calibration                ####
+#**********************************************
+
+# Adjust benefit factor
+paramlist$bfactor <- paramlist$bfactor * 1.125
+
+# Adjust salary growth rate
+sal.adj <- TRUE
+f.adj <- 1
+f1 <- 0.3 
+f2 <- 0.125 
+
+
+
 #**********************************************
 ##   Modify initial data ####
 #**********************************************
@@ -46,7 +63,7 @@ init_beneficiaries_all %<>% filter(age >= 25)
 # paramlist$pct.ca.M <- 1# 0.4 # proportion of males who opt for ca upon retirement
 # paramlist$pct.ca.F <- 1# 0.4
 
-pct.init.ret.ca <- 0  # 0.4
+pct.init.ret.ca <- 0.4  # 0.4
 pct.init.ret.la  <- 1 - pct.init.ret.ca
 
 pct.init.disb.ca <-  0
@@ -218,14 +235,14 @@ var_display2 <- c("Tier", "sim", "year", "FR_MA", "MA", "AL", "EEC","ERC","ERC_P
 
 
 var_display.cali <- c("runname", "sim", "year", "FR","FR_MA", "MA", "AA", "AL", 
-                      "AL.act", "AL.disb.la", "AL.term",
+                      "AL.act", "AL.la", "AL.ca",  "AL.disb.la", "AL.term",
                       "PVFB", "PVFNC", 
                       "B", # "B.la", "B.ca", "B.disb.la","B.disb.ca", 
                       # "C",   
                       "NC","SC", "ERC", "EEC",
                       "PR", "nactives", "nterms",
                       "NC_PR", "SC_PR", # "ERC_PR",
-                      "UAAL")
+                      "UAAL", "PR.growth", "PVFS")
 
 
 
@@ -236,8 +253,8 @@ penSim_results %>% filter(sim == -1) %>% select(one_of(var_display2)) %>% print
 
 # Calibration
 penSim_results %>% filter(sim == -1) %>% select(one_of(var_display.cali)) %>% mutate(AL1 = lag(AL + NC - B) * 1.075 )    %>% print
-penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display.cali)) %>% print
 
+penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display.cali)) %>% mutate(AL.laca = AL.la + AL.ca)
 
 penSim_results %>% filter(sim == -1) %>% select(one_of(var_display.cali)) %>% mutate(AL1 = lag(AL + NC - B) * 1.0725 ) %>% select(runname, sim, year, FR, AA, AL, AL1)
 

@@ -65,6 +65,28 @@ salgrowth.model <-
   
 
 
+  #*******************************************************
+  #                      Calibration 
+  #*******************************************************
+
+  # salgrowth.model %<>% mutate(salgrowth = salgrowth + 0.0)
+
+
+f1 <- ifelse(sal.adj, 1 - f1 * f.adj, 1)
+f2 <- ifelse(sal.adj, 1 + f2 * f.adj, 1)
+
+salgrowth.model %<>% mutate(adj.factor = c(seq(f1, f2, length.out = 25), rep(f2, 31)),
+                           salgrowth.unadj = salgrowth,
+                           salgrowth = salgrowth.unadj * adj.factor)
+
+# Different salary growth for initial actives and new actives (for calibration)
+salgrowth.model.init <- salgrowth.model %>% mutate(type = "init") 
+salgrowth.model.new  <- salgrowth.model %>% mutate(type = "new") 
+
+salgrowth.model <- bind_rows(salgrowth.model.init, salgrowth.model.new)
+
+
+
 # No need to modify salary growth table for PSERS
 get_salgrowth <- function() salgrowth.model
 
@@ -104,8 +126,11 @@ get_scale <- function(
   SS.all <- expand.grid(start.year = (1 - (max.age - min.age)):nyear, ea = range_ea, age = min.age:(r.max - 1)) %>% 
     filter(age >= ea, start.year + (r.max - 1 - ea) >= 1 ) %>% # workers must stay in workforce at least up to year 1. 
     # arrange(start.year, ea, age) %>%
-    mutate(yos = age - ea) %>% 
+    mutate(yos = age - ea,
+           type = ifelse(start.year <= 2016, "init", "new") # PLAN: NCTSERS calibration 
+           ) %>% 
     left_join(.salgrowth) %>%
+    select(-type) %>%                                       # PLAN: NCTSERS calibration 
     group_by(start.year, ea) %>% 
     mutate(year = start.year + (age - ea),
            growth.start = (1 + startingSal_growth)^(start.year - 1),  # assume starting salary grows at the rate of inflation for all entry ages 
