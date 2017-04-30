@@ -17,7 +17,7 @@ options(dplyr.print_min = 100) # default is 10
 options(dplyr.print_max = 100) # default is 20
 library(ggplot2)
 library(magrittr)
-library(tidyr) # gather, spread
+library(tidyr) # gather, spread0
 library(foreach)
 library(doParallel)
 library(microbenchmark)

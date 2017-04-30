@@ -22,13 +22,13 @@ load("Data_inputs/NCTSERS_MemberData_AV2015.RData")  # for all tiers
 #**********************************************
 
 # Adjust benefit factor
-paramlist$bfactor <- paramlist$bfactor * 1.125
+paramlist$bfactor <- paramlist$bfactor * 1.15 # 1.125
 
 # Adjust salary growth rate
 sal.adj <- TRUE
 f.adj <- 1
-f1 <- 0.3 
-f2 <- 0.125 
+f1 <- 0.3 #0.3 
+f2 <- 0.2 #0.125 
 
 
 
