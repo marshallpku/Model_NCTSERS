@@ -56,13 +56,13 @@ mortality.model <- data.frame(age = range_age) %>%
   left_join(mortality) %>% 
   mutate(
          # mortality for actives
-         qxm.pre = qxm.pre.tch.male   * occupGender["actives", "share.tch.male"] + 
+         qxm.pre = qxm.pre.tch.male   * occupGender["actives", "share.tch.male"]   + 
                    qxm.pre.tch.female * occupGender["actives", "share.tch.female"] + 
-                   qxm.pre.edu.male   * occupGender["actives", "share.edu.male"] + 
+                   qxm.pre.edu.male   * occupGender["actives", "share.edu.male"]   + 
                    qxm.pre.edu.female * occupGender["actives", "share.edu.female"] + 
-                   qxm.pre.law.male   * occupGender["actives", "share.law.male"] + 
+                   qxm.pre.law.male   * occupGender["actives", "share.law.male"]   + 
                    qxm.pre.law.female * occupGender["actives", "share.law.female"] +
-                   qxm.pre.gen.male   * occupGender["actives", "share.gen.male"] + 
+                   qxm.pre.gen.male   * occupGender["actives", "share.gen.male"]   + 
                    qxm.pre.gen.female * occupGender["actives", "share.gen.female"],
          
          # mortaltiy for healthy retirees
@@ -97,6 +97,31 @@ mortality.model <- data.frame(age = range_age) %>%
                     qxm.d,
                     qxm.term,
                     qxm.deathBen)
+
+
+
+#*************************************************************************************************************
+#                              Calibration for          NCTSERS                     #####                  
+#*************************************************************************************************************
+
+# Goal: Calibrate PVFB for retirees and beneficiearies downward by 5% to 10%. 
+# Method: Increasing qxm.post.male/female, qxm.post.sur.male/female. 
+
+# mortality.adj <- 1.025
+
+mortality.model %<>% 
+  mutate(qxm.post.male   = mortality.adj * qxm.post.male,
+         qxm.post.female = mortality.adj * qxm.post.female,
+         
+         qxm.post.sur.male   = mortality.adj * qxm.post.sur.male,
+         qxm.post.sur.female = mortality.adj * qxm.post.sur.female)
+
+
+mortality.model %<>% mutate_at(vars(-age, -year), funs(ifelse(age == 120, 1, .) ))
+mortality.model %<>% mutate_at(vars(-age, -year), funs(ifelse(. > 1, 1, .)))
+
+
+
         
          
 ## Compute present values of life annuity(with cola) at each retirement age in each year, using uni-sex mortality with age dependent weights

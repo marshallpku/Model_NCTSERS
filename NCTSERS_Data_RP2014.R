@@ -91,6 +91,11 @@ data_scale_M %<>% gather(year.match, scale.M, -age, -gender) %>% mutate(year.mat
 data_scale_F %<>% gather(year.match, scale.F, -age, -gender) %>% mutate(year.match = as.numeric((year.match)))
 
 
+
+# data_scale_F %<>% mutate(scale.F = 0) 
+# data_scale_M %<>% mutate(scale.M = 0)
+
+
 # Creat data table: age x year x type
 # mortality <- expand.grid(year = 1951:2030, age = 20:120, type = levels(data_raw$type)) %>% 
 #   mutate(gender = str_sub(type, -1))

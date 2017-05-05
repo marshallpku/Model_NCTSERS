@@ -21,14 +21,28 @@ load("Data_inputs/NCTSERS_MemberData_AV2015.RData")  # for all tiers
 ##              Calibration                ####
 #**********************************************
 
-# Adjust benefit factor
-paramlist$bfactor <- paramlist$bfactor * 1.15 # 1.125
 
-# Adjust salary growth rate
-sal.adj <- TRUE
-f.adj <- 1
-f1 <- 0.3 #0.3 
-f2 <- 0.2 #0.125 
+## Liability for active members and normal cost
+  # 1. Adjust benefit factor
+    paramlist$bfactor <- paramlist$bfactor * 1# 1.125
+
+  # 2. Adjust salary growth rate
+    sal.adj <- TRUE
+    f.adj <- 1
+    f1 <- 0 #0.3 
+    f2 <- 0 #0.125 
+
+# Across-the-board increase in salary growth rates (NCTSERS_Model_prepData.R)
+
+  # 3.adj.factor.add = 0.0075
+
+
+
+## Liabilities for retirees and beneficiaries. 
+ # 1. reduce initial benefit
+  init_retirees_all %<>% mutate(benefit = benefit * 1 ) # 0.96) 
+ # 2. increase mortality rates for retirees and survivors. (NCTSERS_Model_Decrements)
+  mortality.adj <- 1# 1.025
 
 
 
