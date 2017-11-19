@@ -8,21 +8,19 @@ Tier_select <- paramlist$tier
 # 1.1 Load data,  for all tiers ####
 #*********************************************************************************************************
 # Plan information
- source("NCTSERS_Data_PlanInfo_AV2015.R")
- source("NCTSERS_Data_MemberData_AV2015.R")
+ # source("NCTSERS_Data_PlanInfo_AV2016.R")
+ # source("NCTSERS_Data_MemberData_AV2016.R")
 
-load("Data_inputs/NCTSERS_PlanInfo_AV2015.RData")    # for all tiers
-load("Data_inputs/NCTSERS_MemberData_AV2015.RData")  # for all tiers
+load("Data_inputs/NCTSERS_PlanInfo_AV2016.RData")    # for all tiers
+load("Data_inputs/NCTSERS_MemberData_AV2016.RData")  # for all tiers
            
-
-
 
 #**********************************************
 ##              Calibration                ####
 #**********************************************
 
 
-## Liability for active members and normal cost
+## Liability for active members and normal cost (Data_prep)
   # 1. Adjust benefit factor
     paramlist$bfactor <- paramlist$bfactor * 1# 1.125
 
@@ -42,8 +40,7 @@ load("Data_inputs/NCTSERS_MemberData_AV2015.RData")  # for all tiers
  # 1. reduce initial benefit
   init_retirees_all %<>% mutate(benefit = benefit * 1 ) # 0.96) 
  # 2. increase mortality rates for retirees and survivors. (NCTSERS_Model_Decrements)
-  mortality.adj <- 1# 1.025
-
+  mortality.adj <- 1 # 1.025
 
 
 #**********************************************
@@ -52,14 +49,14 @@ load("Data_inputs/NCTSERS_MemberData_AV2015.RData")  # for all tiers
 
 ## Exclude selected type(s) of initial members
 # init_actives_all %<>% mutate(nactives = 0) 
-# init_retirees_all %<>% mutate(nretirees = 0)
-# init_beneficiaries_all %<>% mutate(nbeneficiaries = 0)
-# init_terms_all %<>% mutate(nterms = 0)
-# init_disb_all %<>% mutate(ndisb = 0)
+init_retirees_all %<>% mutate(nretirees = 0)
+init_beneficiaries_all %<>% mutate(nbeneficiaries = 0)
+init_terms_all %<>% mutate(nterms = 0)
+init_disb_all %<>% mutate(ndisb = 0)
 
 # init_actives_all %<>% mutate(nactives = ifelse(ea == 30 & age == 30, nactives, 0) ) 
 
-#init_actives_all %>% filter(ea == 30)
+# init_actives_all %>% filter(ea == 30)
 
 ## Exclude initial terms with ea < 20: Data_population, line 504 
 # init_terminated_all %<>% filter(age.term >= Global_paramlist$min.ea,
@@ -74,8 +71,8 @@ load("Data_inputs/NCTSERS_MemberData_AV2015.RData")  # for all tiers
 
 init_beneficiaries_all %<>% filter(age >= 25) 
 
-# paramlist$pct.ca.M <- 1# 0.4 # proportion of males who opt for ca upon retirement
-# paramlist$pct.ca.F <- 1# 0.4
+paramlist$pct.ca.M <- 0# 0.4 # proportion of males who opt for ca upon retirement
+paramlist$pct.ca.F <- 0# 0.4
 
 pct.init.ret.ca <- 0.4  # 0.4
 pct.init.ret.la  <- 1 - pct.init.ret.ca
@@ -109,12 +106,16 @@ init_disb.ca_all <- init_disb_all %>%
 # Decrement tables
 source("NCTSERS_Model_Decrements.R")
 
-list.decrements      <- get_decrements(Tier_select)
+#list.decrements      <- get_decrements(Tier_select)
+
+#save(list.decrements, file = "./list.decrements.test.RData")
+load("./list.decrements.test.RData")
+
 decrement.model      <- list.decrements$decrement.model
 mortality.post.model <- list.decrements$mortality.post.model
 
-
-
+# For testing
+# decrement.model %<>% mutate(qxt = 0) 
 
 
 
@@ -149,18 +150,22 @@ pop <- get_Population()
 
 # pop$la %>% filter(year == 2015, year.r == 2015, number.la !=0)
 
+
+
+
 #*********************************************************************************************************
 # 3. Actuarial liabilities and benefits for contingent annuitants and survivors ####
 #*********************************************************************************************************
 source("NCTSERS_Model_ContingentAnnuity_generational.R")
 
 # For service retirement
-liab.ca <- get_contingentAnnuity(Tier_select, 
-                                 paramlist$factor.ca, # tier.param[Tier_select, "factor.ca"],
-                                 min(paramlist$range_age):100, 
-                                 apply_reduction = TRUE)
+# liab.ca <- get_contingentAnnuity(Tier_select,
+#                                  paramlist$factor.ca, # tier.param[Tier_select, "factor.ca"],
+#                                  min(paramlist$range_age):100,
+#                                  apply_reduction = TRUE)
 
-# For disability benefit
+ 
+# # For disability benefit
 # range_age.disb <-  min(paramlist$range_age):100   # max(paramlist$range_age.r)
 # liab.disb.ca <- get_contingentAnnuity(Tier_select, 
 #                                       paramlist$factor.ca.disb, # tier.param[Tier_select, "factor.ca.disb"],
@@ -168,10 +173,12 @@ liab.ca <- get_contingentAnnuity(Tier_select,
 #                                       apply_reduction = FALSE) %>% 
 #                 rename(age.disb = age.r)
 
+#save(liab.ca, file = "./liab.ca.test.RData")
+load("./liab.ca.test.RData")
 
-liab.disb.ca <-  liab.ca %>% mutate_at(vars(-year.r, -age.r, -age, -year), funs(.*0)) %>% rename(age.disb = age.r)
+
+liab.disb.ca <-  liab.ca %>% ungroup %>%  mutate_at(vars(-year.r, -age.r, -age, -year), funs(.*0)) %>% rename(age.disb = age.r)
 # liab.disb.ca %>% filter(year.r == 2016)
-
 
 #*********************************************************************************************************
 # 4. Individual actuarial liabilities, normal costs and benenfits ####
@@ -256,22 +263,14 @@ var_display.cali <- c("runname", "sim", "year", "FR","FR_MA", "MA", "AA", "AL",
                       "NC","SC", "ERC", "EEC",
                       "PR", "nactives", "nterms",
                       "NC_PR", "SC_PR", # "ERC_PR",
-                      "UAAL", "PR.growth", "PVFS")
-
-
-
-penSim_results %>% filter(sim == -1) %>% select(one_of(var_display1)) %>% print
-penSim_results %>% filter(sim == -1) %>% select(one_of(var_display2)) %>% print
-
-
+                      "UAAL", "PR.growth", "PVFS", "i.r")
 
 # Calibration
-penSim_results %>% filter(sim == -1) %>% select(one_of(var_display.cali)) %>% mutate(AL1 = lag(AL + NC - B) * 1.075 )    %>% print
-
 penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display.cali)) %>% mutate(AL.laca = AL.la + AL.ca)
+penSim_results %>% filter(sim == -1) %>% select(one_of(var_display.cali)) %>% mutate(AL1 = lag(AL + NC - B) * 1.072 ) %>% select(runname, sim, year, FR, AA, AL,  AL1, NC, B)
 
-penSim_results %>% filter(sim == -1) %>% select(one_of(var_display.cali)) %>% mutate(AL1 = lag(AL + NC - B) * 1.0725 ) %>% select(runname, sim, year, FR, AA, AL, AL1)
-
+# penSim_results %>% filter(sim == -1) %>% select(one_of(var_display1)) %>% print
+# penSim_results %>% filter(sim == -1) %>% select(one_of(var_display2)) %>% print
 
 
 #*********************************************************************************************************

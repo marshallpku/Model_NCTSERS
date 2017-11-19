@@ -37,8 +37,8 @@ get_decrements <- function(Tier_select,
 
   
 # Tier_select <- "t1"
-#.Global_paramlist = Global_paramlist
-#.paramlist = paramlist
+# .Global_paramlist = Global_paramlist
+# .paramlist = paramlist
 
 assign_parmsList(.Global_paramlist, envir = environment())
 assign_parmsList(.paramlist,        envir = environment())
@@ -50,7 +50,7 @@ assign_parmsList(.paramlist,        envir = environment())
 #                                Prepare mortality tables for NCTSERS                     #####                  
 #*************************************************************************************************************
 
-mortality
+#mortality
 
 mortality.model <- data.frame(age = range_age) %>% 
   left_join(mortality) %>% 
@@ -293,8 +293,8 @@ retrates.model <- expand.grid(yos = 0:(r.max - min.age), age = r.min:r.max) %>%
   mutate(yos.match = ceiling(yos * 2/10) * 10/2,
          yos.match = ifelse(yos.match > 35, 35, yos.match)) %>% 
   left_join(retRates.spreadage %>% rename(yos.match = yos)) %>% 
+  mutate_at(vars(-yos, -age), funs(ifelse(yos == 0, 0, .))) %>% # will cause problem if grouped by age first
   group_by(age) %>% 
-  mutate_at(vars(-yos, -age), funs(ifelse(yos == 0, 0, .))) %>% 
   mutate(qxr = qxr.male.tch   * occupGender["actives", "share.tch.male"] + 
                qxr.female.tch * occupGender["actives", "share.tch.female"] + 
                qxr.male.edu   * occupGender["actives", "share.edu.male"] + 

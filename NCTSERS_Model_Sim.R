@@ -249,10 +249,7 @@ run_sim <- function(Tier_select_,
    AL.year1 <- penSim0$AL[1]
    UAAL.year1 <- AL.year1 - AA.year1
    
-   factor.initAmort <- UAAL.year1/ 5352563194 # AV2015 page3
-
-   
-        
+   factor.initAmort <- UAAL.year1/ 7170962559 # AV2016 page n3
    
   if(useAVamort){
     SC_amort.init.list <- mapply(amort_LG, p = init_amort_raw_$balance * factor.initAmort , m = init_amort_raw_$year.remaining, method = init_amort_raw_$amort.method,
@@ -516,17 +513,5 @@ run_sim <- function(Tier_select_,
   
 }
 
-
-# 
- # start_time_loop <- proc.time()
- # 
- # penSim_results <- run_sim()
- # 
- # end_time_loop <- proc.time()
- # Time_loop <- end_time_loop - start_time_loop 
- # Time_loop
- # 
- # 
- # 
 
 

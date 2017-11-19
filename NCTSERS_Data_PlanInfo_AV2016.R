@@ -62,7 +62,7 @@
 
 
 # plan information file:
-file_planInfo <- "Data_inputs/NCTSERS_PlanInfo_AV2015.xlsx"
+file_planInfo <- "Data_inputs/NCTSERS_PlanInfo_AV2016.xlsx"
 
 
 #*********************************************************************************************************
@@ -247,7 +247,7 @@ salgrowth <- read_ExcelRange(file_planInfo, sheet="SalaryGrowth") # %>% rename(a
 #*********************************************************************************************************
 
 tier.param <- read_ExcelRange(file_planInfo, sheet="Tier.param", colTypes="character") %>%
-  mutate_each(funs(as.numeric), -tier)
+  mutate_at( vars(-tier), funs(as.numeric))
 row.names(tier.param) <- tier.param$tier
 # 
 
@@ -262,7 +262,7 @@ init_amort_raw %<>%
   mutate(year.est = year(year.est)) %>%
   mutate_at(vars(-tier,  -type, -amort.method), funs(as.numeric))
 
-# init_amort_raw # %>% str
+# nit_amort_raw  %>% str
 
 
 #*********************************************************************************************************
@@ -283,10 +283,10 @@ init_unrecReturns.unadj <- read_ExcelRange(file_planInfo, sheet = "Init_unrecRet
 
 save(mortality, retRates, termRates1, termRates2, disbRates, 
      salgrowth, 
-     # tier.param, 
+     tier.param, 
      init_amort_raw, 
      init_unrecReturns.unadj, 
-     file  = "Data_inputs/NCTSERS_PlanInfo_AV2015.RData")
+     file  = "Data_inputs/NCTSERS_PlanInfo_AV2016.RData")
 
 
 
