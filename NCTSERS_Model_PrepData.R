@@ -77,7 +77,7 @@ f2 <- ifelse(sal.adj, 1 + f2 * f.adj, 1)
 
 salgrowth.model %<>% mutate(salgrowth.unadj = salgrowth,
   
-                            adj.factor.add = 0, # 0.0075,
+                            adj.factor.add = ifelse(sal.adj, factor_salgrowth.add, 0), # 0.0075,
                             salgrowth = salgrowth.unadj + adj.factor.add
                             
                             # adj.factor = c(seq(f1, f2, length.out = 25), rep(f2, 31)),

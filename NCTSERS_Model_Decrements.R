@@ -313,7 +313,8 @@ retrates.model <- expand.grid(yos = 0:(r.max - min.age), age = r.min:r.max) %>%
 #*************************************************************************************************************
 
 # Create decrement table and calculate probability of survival
-decrement.model <- expand.grid(start.year = (init.year - (max.age - min.age)):(init.year + nyear - 1), age = range_age, ea = range_ea) %>% 
+#decrement.model <- expand.grid(start.year = (init.year - (max.age - min.age)):(init.year + nyear - 1), age = range_age, ea = range_ea) %>% 
+ decrement.model <- expand.grid(start.year = 1915:(init.year + nyear - 1), age = range_age, ea = range_ea) %>% 
   mutate(yos = age - ea,
          year = start.year + yos) %>% 
   filter(age >= ea) %>% 

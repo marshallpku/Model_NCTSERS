@@ -46,15 +46,14 @@ get_AggLiab <- function( Tier_select_,
      # paramlist_ = paramlist
      # Global_paramlist_ = Global_paramlist
 
-  
    assign_parmsList(Global_paramlist_, envir = environment())
    assign_parmsList(paramlist_,        envir = environment())
   
    # Choosing tier specific parameters and data
    #cola     <- tier.param[Tier_select_, "cola"]
    init_beneficiaries_ <- get_tierData(init_beneficiaries_all_, Tier_select_)
-   init_retirees.ca_   <- get_tierData(init_retirees.ca_all_, Tier_select_)
-   init_disb.ca_       <- get_tierData(init_disb.ca_all_,     Tier_select_)
+   init_retirees.ca_   <- get_tierData(init_retirees.ca_all_,   Tier_select_)
+   init_disb.ca_       <- get_tierData(init_disb.ca_all_,       Tier_select_)
    
   # Notes on naming conventions:
    # "tot" denotes total AL/NA/... in each year * age * ea cell
@@ -78,7 +77,8 @@ get_AggLiab <- function( Tier_select_,
   #*************************************************************************************************************
   #                                     ## Liabilities and NCs for actives   ####
   #*************************************************************************************************************
-  
+  #liab_   = liab CALIBRATION
+   
   # Join population data frames and liability data frames. 
   liab_$active <- left_join(pop_$active, liab_$active) # %>% left_join(new_retirees)
   liab_$active %<>% mutate_at(vars(-year, -ea, -age), funs(na2zero)) # replace NAs with 0, so summation involing missing values will not produce NAs. 
@@ -155,13 +155,18 @@ get_AggLiab <- function( Tier_select_,
   
    # active.agg %>% as.data.frame()
    
-   
-   # x <- liab_$active %>% mutate(start.year = year - (age - ea)) %>% 
-   #   select(start.year, year, age, ea, number.a, ALx.laca, NCx.laca, Bx.laca, sx, PR.tot, Bx, ax.r.W, gx.laca)
-   #   
-   # x %>% filter(start.year == 2016, ea == 25)
-   #    
-   
+  # liab_$active %>% head
+  # x <- liab_$active %>% select(year, ea, age, ALx.laca, NCx.laca, ALx.laca.tot, NCx.laca.tot) %>%
+  #   mutate(start.year = year - (age - ea))
+  # 
+  # x %>% filter(start.year == 2017, ea == 30) %>%
+  #   mutate(diff= NCx.laca.tot * 1.072/lead(ALx.laca.tot))
+  # 
+  # 
+  # active.agg %>% head
+  # x$start.year %>% range
+  
+  
    
   #*************************************************************************************************************
   #                                     ## Liabilities and benefits for retirees (life annuitants)   ####
@@ -190,8 +195,14 @@ get_AggLiab <- function( Tier_select_,
     as.matrix
   
   # la.agg %>% as.data.frame
+ 
+  # liab_$la %>% head
+  # y <- liab_$la %>% 
+  #   mutate(start.year = year - (age - ea)) %>% 
+  #   select(start.year, year.r, ea, age, number.la,ALx.la, B.la, ALx.la.tot)
   # 
-  # x <- liab_$la %>% filter(year.r == 2016)
+  # y$start.year %>% range
+  # y %>% filter(start.year == 2017, ea ==20) %>% arrange(start.year, year.r, ea, age)
   
   
   #*************************************************************************************************************

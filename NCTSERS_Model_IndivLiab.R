@@ -76,7 +76,6 @@ v.yos    <- tier.param[Tier_select_, "v.yos"]
 
 
 init_terminated_ <-  get_tierData(init_terms_all_, Tier_select_)
-
 init_terminated_ %<>% mutate(benefit = 0.75 * 0.42 * termCon) 
   
 #*************************************************************************************************************
@@ -196,15 +195,13 @@ liab.active %<>%
 
 
 # x <- liab.active %>%
-#   select(start.year, year, age, ea, NCx.EAN.CP.laca, PVFNC.EAN.CP.laca, ALx.EAN.CP.laca, PVFBx.laca, TCx.ca, TCx.la,TCx.laca,Bx.laca, liab.ca.sum.1)
+#   select(start.year, year, age, ea, NCx.EAN.CP.laca, PVFNC.EAN.CP.laca, ALx.EAN.CP.laca, PVFBx.laca, TCx.ca, TCx.la,TCx.laca,Bx.laca, liab.ca.sum.1, sx)
+# x %>% filter(start.year == 2017, ea == 30)
+
+# x <- liab.active %>%
+#   select(start.year, year, age, ea, NCx.EAN.CP.laca, PVFNC.EAN.CP.laca, ALx.EAN.CP.laca, PVFBx.laca, TCx.la,TCx.laca,Bx.laca, qxr.la, ax.r.W, ayx, axRs, pxT)
+# x %>% filter(start.year == 2017, ea == 30) 
 # 
-# x %>% filter(start.year == 2016, ea == 29)
-# 
-# # 
-# # liab.ca_ %>% filter(age == age.r, year == 2047, age == 60)
-# # 
-# # 
-# # liab.ca_ %>% filter(year == 2047, ) %>% arrange()
 
 
 
@@ -649,12 +646,14 @@ liab.disb.la <- liab.disb.la[!duplicated(liab.disb.la %>% select(start.year, ea,
 
 
 liab.disb.la <- merge(liab.disb.la,
-                    select(liab.active, start.year, ea, age, Bx.disb, COLA.scale, gx.disb, ax.disb.la, pxm.d) %>% data.table(key = "ea,age,start.year"),
+                    select(liab.active, start.year, ea, age, Bx.disb, COLA.scale, gx.disb, ax.disb.la) %>% data.table(key = "ea,age,start.year"),
                     all.x = TRUE, 
                     by = c("ea", "age","start.year")) %>%
   arrange(start.year, ea, age.disb) %>% 
   as.data.frame %>% 
-  left_join(benefit.disb_)
+  left_join(benefit.disb_) %>% 
+  left_join(decrement.model_ %>% select(start.year, ea, age, pxm.d)) 
+
 #%>% 
 # left_join(select(mortality.post.model_, age, age.r, ax.r.W.ret = ax.r.W)) %>%  #  load present value of annuity for all retirement ages, ax.r.W in liab.active cannot be used anymore. 
 

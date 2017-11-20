@@ -436,6 +436,15 @@ run_sim <- function(Tier_select_,
       ) 
     
       
+      ## NCTSERS ESRSP
+      
+      if(j == 1 & k!=-1) penSim$ERC[j] <- max((0.1198 + 0.0035) *  penSim$PR[j], penSim$ERC[j])
+      
+      if(j %in% 2:4 & k!=-1) penSim$ERC[j] <- max( (penSim$ERC[j-1] /penSim$PR[j-1] + 0.0035) *  penSim$PR[j], penSim$ERC[j])
+
+      
+      
+      
       
       # C(j)
       penSim$C[j] <- with(penSim, EEC[j] + ERC[j])
