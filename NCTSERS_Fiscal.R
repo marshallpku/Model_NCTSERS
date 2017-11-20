@@ -68,7 +68,7 @@ RIG.theme <- function(){
 ##  Load revenue data and extend the projection into 2044  ####
 #**********************************************************************************************
 
-# source: City of LA Revenue Outlook, FY 2016-17
+# source: 
 df_revenue <- read_ExcelRange("Data_inputs/NCTSERS_PlanInfo_AV2015.xlsx", sheet = "Fiscal")
 
 # extend the projection into 2044 using the projected growth rate of 2.9% in 2020 

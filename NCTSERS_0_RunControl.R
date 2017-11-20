@@ -196,12 +196,12 @@ for(runName in runList$runname ){
 
   if(paramlist$tier == "sumTiers"){
     source("NCTSERS_0_Master_allTiers.R")
-    save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, "_", runName, ".RData"))
+    save(outputs_list, file = paste0(folder_save, "Outputs_",  paramlist$tier, "_", runName, ".RData"))
 
   } else {
     Tier_select <- paramlist$tier
     source("NCTSERS_0_Master_singleTier.R")
-    save(outputs_list, file = paste0(folder_save, "results_",  paramlist$tier, runName, ".RData"))
+    save(outputs_list, file = paste0(folder_save, "Outputs_",  paramlist$tier,"_", runName, ".RData"))
   }
 
 }
