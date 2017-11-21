@@ -280,6 +280,9 @@ run_sim <- function(Tier_select_,
   # # The amortization basis of year j should be placed in row nrow.initAmort + j - 1. 
   # # save(SC_amort0, file = "SC_amort0.RData")  
   
+  #SC_amort0[,] %>% sum
+  
+  
   #*************************************************************************************************************
   #                                       Simuation  ####
   #*************************************************************************************************************
@@ -289,7 +292,7 @@ run_sim <- function(Tier_select_,
   
   
   penSim_results <- foreach(k = -1:nsim, .packages = c("dplyr", "tidyr")) %dopar% {
-    #k <- 1
+    # k <- 0
     # initialize
     penSim   <- penSim0
     SC_amort <- SC_amort0
@@ -304,7 +307,7 @@ run_sim <- function(Tier_select_,
     
     for (j in 1:nyear){
         
-        # j <- 2
+        # j <- 1
         # j <- 2
 
       # MA(j) and EAA(j) 
@@ -337,7 +340,7 @@ run_sim <- function(Tier_select_,
       
       
       ## Initial unrecognized returns
-      if((init_AA %in% c("AL_pct", "AA0")) & useAVunrecReturn & k != -1 & Tier_select_ == "sumTiers"){
+      if((init_AA %in% c("AL_pct", "AA0")) & useAVunrecReturn & k != -1){
 
         # Adjusting initila unrecognized returns
         init_unrecReturns.adj <-  mutate(init_unrecReturns.unadj_, DeferredReturn = DeferredReturn * (penSim$MA[1] - penSim$AA[1])/sum(DeferredReturn),
@@ -377,11 +380,16 @@ run_sim <- function(Tier_select_,
         penSim$LG[j]    <- with(penSim,  UAAL[j] - EUAAL[j])
         
         # NCTSERS: do not amortize over-payments
-        if(penSim$C_ADC[j-1] < 0) penSim$Amort_basis[j] <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1]))
-      
-        
+        if(penSim$C_ADC[j-1] < 0) penSim$Amort_basis[j] <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1])) else penSim$Amort_basis[j] <- with(penSim,  LG[j])
       }   
       
+      
+      # penSim$Amort_basis
+      # penSim$LG
+      # penSim$UAAL
+      # penSim$EUAAL
+      # penSim$MA
+      # penSim$AA
       
       # # Amortize LG(j)
     
@@ -396,6 +404,8 @@ run_sim <- function(Tier_select_,
       penSim$SC[j] <- switch(amort_type,
                              closed = sum(SC_amort[, j]),
                              open   = amort_LG(penSim$UAAL[j], i, m, salgrowth_amort, end = FALSE, method = amort_method)[1])
+      
+      
       
       
       

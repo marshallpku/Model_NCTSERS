@@ -122,6 +122,9 @@ runs_ECRSP <-   c("RS1_ECRSP",
                   "RS2_ECRSP",
                   "RS3_ECRSP")
 
+runs_open <-   c( "RS1_open12",
+                  "RS1_open24")
+
 
 # runs_alt <- c("RS1_SR1EL1.open", "RS1_SR1EL1.PR", "RS1_SR1EL1.s5",
 #             "RS1_SR1allEL1", "RS2_SR1allEL1", "RS3_SR1allEL1")
@@ -137,6 +140,8 @@ runs_ECRSP_labels <- c("Assumption Achieved: ECRSP",
                     "15 Years of Low Returns: ECRSP",
                     "High Volatility: ECRSP")
 
+runs_open_labels <- c("open 12-year amort",
+                      "open 24-year amort")
 
 
 # runs_alt_labels    <- c("open amortization", 
@@ -155,29 +160,31 @@ runs_ECRSP_labels <- c("Assumption Achieved: ECRSP",
 # lab_s6 <- "Scenario 6 \nLower Return Assumption"
 
 
-runs_all <- c(runs_RS, runs_ECRSP)
-runs_all_labels <- c(runs_RS_labels, runs_ECRSP_labels)
+runs_all <- c(runs_RS, runs_ECRSP, runs_open)
+runs_all_labels <- c(runs_RS_labels, runs_ECRSP_labels, runs_open_labels)
 
 
 
 # Calculate total final ERC rate for runs with DC reform (include ERC to DC in ERC.final_PR)
 
 
+# in the past 5 years ERC rate
+#ERC_rate_5y <- data.frame(year = 2012:2016, ERC_rate_5y = c(0.0869,0.0915, 0.0915 ,0.0998, 0.1078))
+ERC_rate_5y <- c(8.69,9.15, 9.15 ,9.98, 10.78)
+
 df_all.stch <- results_all  %>% 
   filter(runname %in% runs_all, sim > 0, year %in% 2017:2046)
-
-
 
 df_all.stch %<>%   
   select(runname, sim, year, FR_MA, AL, MA, ERC, EEC, PR, ERC_PR, ERC_GF) %>%
   group_by(runname, sim) %>% 
-  mutate(
+  mutate(rowNumber = row_number(),
          FR40less  = cumany(FR_MA <= 40),
          FR60less  = cumany(FR_MA <= 60),
          FR75less  = cumany(FR_MA <= 75),
          FR100more = FR_MA >= 100,
          ERC_high  = cumany(ERC_PR >= 64), 
-         ERC_hike     = cumany(na2zero(ERC_PR - lag(ERC_PR, 5) >= 10)),  # NA for 2016 value: excludes impact of new amort payment in 2017 
+         ERC_hike     = cumany(na2zero(c(ERC_rate_5y, ERC_PR) - lag(c(ERC_rate_5y, ERC_PR), 5) >= 10))[-(1:5)],  # NA for 2016 value: excludes impact of new amort payment in 2017 
          ERC_GF_hike  = cumany(na2zero(ERC_GF - lag(ERC_GF, 5) >= 5))
          ) %>% 
   group_by(runname, year) %>% 
@@ -187,7 +194,7 @@ df_all.stch %<>%
             FR100more = 100 * sum(FR100more, na.rm = T)/n(),
             ERC_high  = 100 * sum(ERC_high, na.rm = T)/n(),
             ERC_hike  = 100 * sum(ERC_hike, na.rm = T)/n(),
-            ERC_GF_hike = 100 * sum(ERC_hike, na.rm = T)/n(),
+          #  ERC_GF_hike = 100 * sum(ERC_hike, na.rm = T)/n(),
             
             FR.q10   = quantile(FR_MA, 0.1,na.rm = T),
             FR.q25   = quantile(FR_MA, 0.25, na.rm = T),
@@ -214,18 +221,21 @@ df_all.stch %<>%
                               labels = runs_all_labels))
 
 
+
+
+
   
 df_all.stch %>% filter(runname == "RS1")
 df_all.stch %>% filter(runname == "RS2")
 df_all.stch %>% filter(runname == "RS3")
 
-df_all.stch %>% filter(runname == "RS1_ECRSP")
-df_all.stch %>% filter(runname == "RS2_ECRSP")
-df_all.stch %>% filter(runname == "RS3_ECRSP")
+df_all.stch %>% filter(runname == "RS1_open12")
+df_all.stch %>% filter(runname == "RS1_open24")
 
 
 
-results_all %>% filter(runname == "RS1", sim == 1 )  %>% select(runname, year, FR_MA, AL, PR, NC,B,SC, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original)
+
+results_all %>% filter(runname == "RS1", sim == 0)  %>% select(runname, year, FR_MA, AL,MA, AA, PR, NC,B,SC, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original, Amort_basis, i.r, NC_PR, SC_PR)
 results_all %>% filter(runname == "RS2", sim == 0 )  %>% select(runname, year, FR_MA, AL, PR, NC,B,SC, ERC_PR, i)
 results_all %>% filter(runname == "RS3", sim == 0 )  %>% select(runname, year, FR_MA, AL, PR, NC,B,SC, ERC_PR, i)
 
@@ -326,7 +336,7 @@ fig_distReturn
 
 # Distribution of funded ratio 
 fig.title <- "Distribution of funded ratios across simulations"
-fig.subtitle <- "Current NCTSERS funding policy; Scenario 1: Assumption Achieved" 
+fig.subtitle <- "Current NC-TSERS funding policy; Scenario 1: Assumption Achieved" 
 fig_CP.RS1.FRdist <- df_all.stch %>% filter(runname %in% "RS1") %>% 
   left_join(results_all  %>% 
               filter(runname  %in% "RS1", sim == 0) %>% 
@@ -340,7 +350,7 @@ fig_CP.RS1.FRdist <- df_all.stch %>% filter(runname %in% "RS1") %>%
   geom_line() + 
   geom_point(size = 2) + 
   geom_hline(yintercept = 100, linetype = 2, size = 1) +
-  coord_cartesian(ylim = c(0,180)) + 
+  coord_cartesian(ylim = c(40,200)) + 
   scale_x_continuous(breaks = c(2017, seq(2020, 2040, 5),2046)) + 
   scale_y_continuous(breaks = seq(0, 500, 20)) + 
   scale_color_manual(values = c(RIG.green, RIG.blue, RIG.red, "black"),  name = NULL, 
@@ -375,7 +385,7 @@ fig_CP.RS1.ERCdist <- df_all.stch %>% filter(runname %in% "RS1") %>%
   geom_line() + 
   geom_point(size = 2) + 
   geom_hline(yintercept = 100, linetype = 2, size = 1) +
-  coord_cartesian(ylim = c(0,30)) + 
+  coord_cartesian(ylim = c(0,25)) + 
   scale_x_continuous(breaks = c(2017, seq(2020, 2040, 5), 2046)) + 
   scale_y_continuous(breaks = seq(0, 500, 5)) + 
   scale_color_manual(values = c(RIG.red, RIG.blue, RIG.green, "black"),  name = NULL, 
@@ -391,12 +401,13 @@ fig_CP.RS1.ERCdist
 
 
 # Risk of low funded ratio
-fig.title <- "Probability of funded ratio below 40% in any year up to the given year"
+fig.title <- "Probabilities of funded ratio below 75%, 60%, and 40% in any year up to the given year"
 fig.subtitle <- "Current NCTSERS funding policy; Scenario 1: Assumption Achieved"
 fig_CP.RS1.FR40less <- df_all.stch %>% filter(runname %in% "RS1", year >= 2016) %>% 
   #mutate(runname = factor(runname, labels = c(lab_s1, lab_s2))) %>%  
   select(runname, year, FR75less, FR60less, FR40less) %>%
   gather(type, value, -runname, -year) %>% 
+  mutate(type = factor(type, levels = c("FR75less", "FR60less", "FR40less"), labels = c("75%","60%", "40%" ))) %>% 
   #mutate(FR40less.det = 0) %>% 
   #gather(variable, value, -year) %>% 
   ggplot(aes(x = year, y = value, color = type, shape = type)) + 
@@ -407,15 +418,15 @@ fig_CP.RS1.FR40less <- df_all.stch %>% filter(runname %in% "RS1", year >= 2016) 
   coord_cartesian(ylim = c(0,80)) + 
   scale_y_continuous(breaks = seq(0,200, 10)) +
   scale_x_continuous(breaks = c(2017, seq(2020, 2040, 5), 2046)) + 
-  scale_color_manual(values = c(RIG.blue, RIG.green, RIG.red),  name = "") + 
-  scale_shape_manual(values = c(17,16, 15),  name = "") +
+  scale_color_manual(values = c(RIG.blue, RIG.green, RIG.red),  name = "Probability of \nfunded ratio below:") + 
+  scale_shape_manual(values = c(17,16, 15),  name = "Probability of \nfunded ratio below:") +
   labs(title = fig.title,
        subtitle = fig.subtitle,
        x = NULL, y = "Probability (%)") + 
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3))+
   RIG.theme()
 fig_CP.RS1.FR40less
-fig_CP.RS1.FR40less$data %>% filter(year == 2045)
+fig_CP.RS1.FR40less$data %>% filter(year == 2046)
 
 
 
@@ -498,7 +509,7 @@ fig_CP.RScompare.ERChike <- df_all.stch %>% filter(runname %in% c("RS1", "RS2", 
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3))+
   RIG.theme()
 fig_CP.RScompare.ERChike
-fig_CP.RS23.ERChike$data %>% filter(year == 2046)
+fig_CP.RScompare.ERChike$data %>% filter(year == 2046)
 
 
 
@@ -617,29 +628,25 @@ g.width.3col  <- 15*0.8
 
 ggsave(file = paste0(Outputs_folder, "distReturn.png"),   fig_distReturn, height = g.height.1col, width = g.width.1col)
 
-# 1. Current policy
-ggsave(file = paste0(Outputs_folder, "fig1.CP.RS1.FRdist.png"),   fig_CP.RS1.FRdist,  height = g.height.1col, width = g.width.1col)
-ggsave(file = paste0(Outputs_folder, "fig2.CP.RS1.FR40less.png"), fig_CP.RS1.FR40less,height = g.height.1col, width = g.width.1col*0.8)
-ggsave(file = paste0(Outputs_folder, "fig3.CP.RS1.ERCdist.png"),  fig_CP.RS1.ERCdist, height = g.height.1col, width = g.width.1col)
-ggsave(file = paste0(Outputs_folder, "fig4.CP.RS1.ERChike.png"),  fig_CP.RS1.ERChike, height = g.height.1col, width = g.width.1col*0.8)
+# 1. Current policy: assumption achieved
+ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.FRdist.png"),   fig_CP.RS1.FRdist,  height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.FR40less.png"), fig_CP.RS1.FR40less,height = g.height.1col, width = g.width.1col*1.1)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.ERCdist.png"),  fig_CP.RS1.ERCdist, height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.ERChike.png"),  fig_CP.RS1.ERChike, height = g.height.1col, width = g.width.1col*0.8)
 
-ggsave(file = paste0(Outputs_folder, "fig1.CP.RS1.FRdist.pdf"),   fig_CP.RS1.FRdist,  height = g.height.1col, width = g.width.1col)
-ggsave(file = paste0(Outputs_folder, "fig2.CP.RS1.FR40less.pdf"), fig_CP.RS1.FR40less,height = g.height.1col, width = g.width.1col*0.8)
-ggsave(file = paste0(Outputs_folder, "fig3.CP.RS1.ERCdist.pdf"),  fig_CP.RS1.ERCdist, height = g.height.1col, width = g.width.1col)
-ggsave(file = paste0(Outputs_folder, "fig4.CP.RS1.ERChike.pdf"),  fig_CP.RS1.ERChike, height = g.height.1col, width = g.width.1col*0.8)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.FRdist.pdf"),   fig_CP.RS1.FRdist,  height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.FR40less.pdf"), fig_CP.RS1.FR40less,height = g.height.1col, width = g.width.1col*1.1)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.ERCdist.pdf"),  fig_CP.RS1.ERCdist, height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.ERChike.pdf"),  fig_CP.RS1.ERChike, height = g.height.1col, width = g.width.1col*0.8)
 
 
 
-# 1. Current policy
-ggsave(file = paste0(Outputs_folder, "fig5.CP.RS23.FR40less.png"), fig_CP.RS23.FR40less,height = g.height.1col, width = g.width.1col)
-ggsave(file = paste0(Outputs_folder, "fig6.CP.RS23.ERChike.png"),  fig_CP.RS23.ERChike, height = g.height.1col, width = g.width.1col)
+# 2. Current policy: alt return scn
+ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.FRless.png"), fig_CP.RScompare.FRless, height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.ERChike.png"),fig_CP.RScompare.ERChike, height = g.height.1col, width = g.width.1col)
 
-ggsave(file = paste0(Outputs_folder, "fig5.CP.RS23.FR40less.pdf"), fig_CP.RS23.FR40less,height = g.height.1col, width = g.width.1col)
-ggsave(file = paste0(Outputs_folder, "fig6.CP.RS23.ERChike.pdf"),  fig_CP.RS23.ERChike, height = g.height.1col, width = g.width.1col)
-
-# 2. Impact of policies 
-ggsave(file = paste0(Outputs_folder, "fig7.SR.ERChike.png"),  fig_SR.ERChike, height = g.height.3col*0.9*1.15, width = g.width.3col*0.9)
-ggsave(file = paste0(Outputs_folder, "fig7.SR.ERChike.pdf"),  fig_SR.ERChike, height = g.height.3col*0.9*1.15, width = g.width.3col*0.9)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.FRless.pdf"), fig_CP.RScompare.FRless,height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.ERChike.pdf"),fig_CP.RScompare.ERChike, height = g.height.1col, width = g.width.1col)
 
 
 # 3. Fiscal
