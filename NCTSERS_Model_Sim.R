@@ -129,16 +129,20 @@ run_sim <- function(Tier_select_,
            C_PR = 0,
            nactives  = 0,
            nretirees = 0,
-           nterms    = 0)
+           nterms    = 0,
+           
+           ERC_orginal = 0,
+           geoReturn5y = 0,
+           ECRSP_switch = TRUE,
+           ECRSP_effective = FALSE,
+           ERCrate_max = 0,
+           ERCrate_min = 0
+           )
   # penSim0 <- as.list(penSim0)
-  
   
   
   # Vector used in asset smoothing
   s.vector <- seq(0,1,length = s.year + 1)[-(s.year+1)]; s.vector  # a vector containing the porportion of 
-  
-
-
   
   
   #*************************************************************************************************************
@@ -213,6 +217,13 @@ run_sim <- function(Tier_select_,
   penSim0$ndisb.ca.R1   <- AggLiab_$disb.ca[,  "n.disb.R1"]
   penSim0$ndisb.ca.R0S1 <- AggLiab_$disb.ca[,  "n.disb.R0S1"]
 
+  # AL and NC at risk free rate 
+  
+  df_riskFreeALNC %<>% filter(year %in% init.year:(init.year + nyear - 1))
+  
+  penSim0$AL_rf <- df_riskFreeALNC$AL_rf
+  penSim0$NC_rf <- df_riskFreeALNC$NC_rf
+  
   
   penSim0 <- as.list(penSim0) # Faster to extract elements from lists than frame data frames.
   
@@ -278,7 +289,7 @@ run_sim <- function(Tier_select_,
   
   
   penSim_results <- foreach(k = -1:nsim, .packages = c("dplyr", "tidyr")) %dopar% {
-    # k <- 1
+    #k <- 1
     # initialize
     penSim   <- penSim0
     SC_amort <- SC_amort0
@@ -293,7 +304,7 @@ run_sim <- function(Tier_select_,
     
     for (j in 1:nyear){
         
-        # j <- 1
+        # j <- 2
         # j <- 2
 
       # MA(j) and EAA(j) 
@@ -362,15 +373,12 @@ run_sim <- function(Tier_select_,
         
       } else {
         penSim$EUAAL[j] <- with(penSim, (UAAL[j - 1] + NC[j - 1])*(1 + i[j - 1]) - C[j - 1] - Ic[j - 1])
-        
-        # if(j %in% (B.adj$year - init.year + 1 + 1)) penSim$EUAAL[j] <- penSim$EUAAL[j] + (B.adj[B.adj$year == j + init.year - 1 - 1,]$B.extra) * (1 + i) # For LAFPP. adjustment for initial DROP benefit balance is not used in the calculation of losses/gains.
-        
+  
         penSim$LG[j]    <- with(penSim,  UAAL[j] - EUAAL[j])
-        penSim$Amort_basis[j]    <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1]))
+        
+        # NCTSERS: do not amortize over-payments
+        if(penSim$C_ADC[j-1] < 0) penSim$Amort_basis[j] <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1]))
       
-        # penSim$EUAAL.MA[j] <- with(penSim, (UAAL.MA[j - 1] + NC[j - 1])*(1 + i[j - 1]) - C[j - 1] - Ic[j - 1])
-        # penSim$LG[j]    <- with(penSim,  UAAL.MA[j] - EUAAL.MA[j])
-        # penSim$Amort_basis[j]    <- with(penSim,  LG[j] - (C_ADC[j - 1]) * (1 + i[j - 1]))
         
       }   
       
@@ -436,15 +444,47 @@ run_sim <- function(Tier_select_,
       ) 
     
       
-      ## NCTSERS ESRSP
+      ## NCTSERS ECRSP (current polity through 2020)
       
-      if(j == 1 & k!=-1) penSim$ERC[j] <- max((0.1198 + 0.0035) *  penSim$PR[j], penSim$ERC[j])
+      penSim$ERC_original[j] <- penSim$ERC[j]
       
-      if(j %in% 2:4 & k!=-1) penSim$ERC[j] <- max( (penSim$ERC[j-1] /penSim$PR[j-1] + 0.0035) *  penSim$PR[j], penSim$ERC[j])
-
+      penSim$ERCrate_max[j] <- (amort_cd(penSim$AL_rf[j] - penSim$AA[j], i = i.riskFree, m)[1] + penSim$NC_rf[j])/penSim$PR[j]
+      if(j>1){ penSim$ERCrate_min[j] <- penSim$ERC[j-1] / penSim$PR[j-1] + 0.0035}
+      
+      
+      if(useECRSP){
+      
+      if(j == 1 & k!=-1) penSim$ERC[j] <- max(min(penSim$ERCrate_max[j] * penSim$PR[j], penSim$ERC[j]), (0.1198 + 0.0035) *  penSim$PR[j]) 
+      
+      if(j %in% 2:4 & k!=-1) penSim$ERC[j] <- max(min(penSim$ERCrate_max[j] * penSim$PR[j], penSim$ERC[j]),  (penSim$ERC[j-1] /penSim$PR[j-1] + 0.0035) *  penSim$PR[j])
+      }
+      
+      ## NCTSERS ECRSP (future)
+      
+      # Assume ECRSP will be reinstated for 5 years whenever the geometric mean return of the past 5 year are 2% below the assumed return
+      # variable needed:
+      #  1. geometric mean return of past five years
+      #  2. indicator var for if ECRSP is instated. 
+      #  3. indicator var for if the ECRSP decision will be made in that year.
+      #  4. ERCrate_max, ERCrate_min 
       
       
       
+      if(j>=5 & useECRSP_future & k!=-1){
+      
+      penSim$geoReturn5y[j] <- get_geoReturn(penSim$i.r[(j-4):j])
+      
+       if(penSim$geoReturn5y[j] <= (i - 0.02) & penSim$ECRSP_switch[j]){
+         penSim$ECRSP_effective[j:(j+ min(4, nyear - j) )] <- TRUE
+         penSim$ECRSP_switch[j:(j + min(4, nyear - j))]    <- FALSE
+       }
+      
+       if(penSim$ECRSP_effective[j]){
+        
+         penSim$ERC[j] <-  max(min(penSim$ERC[j], penSim$ERCrate_max[j] * penSim$PR[j]), penSim$ERCrate_min[j] * penSim$PR[j])
+        
+       } 
+      }
       
       # C(j)
       penSim$C[j] <- with(penSim, EEC[j] + ERC[j])
@@ -508,6 +548,7 @@ run_sim <- function(Tier_select_,
            SC_PR   = 100 * SC / PR, 
            ERC_PR  = 100 * ERC / PR,
            EEC_PR  = 100 * EEC / PR, 
+           ERC.original_PR = 100 * ERC_original / PR,
            C_PR    = 100 * C / PR,
            B_PR    = 100 * B / PR,
            ExF     = C - B,
@@ -521,6 +562,24 @@ run_sim <- function(Tier_select_,
   return(penSim_results)
   
 }
+
+# 
+# penSim_results %>% select(sim, year, geoReturn5y, ECRSP_switch, ECRSP_effective, ERCrate_max, ERC.original_PR, ERCrate_min,  ERC_PR, AL_rf,NC_rf, AA, i.r) %>% 
+#   filter(sim == 1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

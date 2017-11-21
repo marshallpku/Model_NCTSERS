@@ -13,7 +13,7 @@ Tier_select <- paramlist$tier
 
 load("Data_inputs/NCTSERS_PlanInfo_AV2016.RData")    # for all tiers
 load("Data_inputs/NCTSERS_MemberData_AV2016.RData")  # for all tiers
-           
+load("Results/df_riskFreeALNC.RData")
 
 #**********************************************
 ##              Calibration                ####

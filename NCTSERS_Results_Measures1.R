@@ -117,6 +117,12 @@ runs_RS <-   c("RS1",
                "RS2",
                "RS3")
 
+
+runs_ECRSP <-   c("RS1_ECRSP",
+                  "RS2_ECRSP",
+                  "RS3_ECRSP")
+
+
 # runs_alt <- c("RS1_SR1EL1.open", "RS1_SR1EL1.PR", "RS1_SR1EL1.s5",
 #             "RS1_SR1allEL1", "RS2_SR1allEL1", "RS3_SR1allEL1")
 
@@ -126,6 +132,10 @@ runs_RS <-   c("RS1",
 runs_RS_labels <- c("Assumption Achieved: Baseline",
                      "15 Years of Low Returns",
                      "High Volatility")
+
+runs_ECRSP_labels <- c("Assumption Achieved: ECRSP",
+                    "15 Years of Low Returns: ECRSP",
+                    "High Volatility: ECRSP")
 
 
 
@@ -145,8 +155,8 @@ runs_RS_labels <- c("Assumption Achieved: Baseline",
 # lab_s6 <- "Scenario 6 \nLower Return Assumption"
 
 
-runs_all <- c(runs_RS)
-runs_all_labels <- c(runs_RS_labels)
+runs_all <- c(runs_RS, runs_ECRSP)
+runs_all_labels <- c(runs_RS_labels, runs_ECRSP_labels)
 
 
 
@@ -209,13 +219,22 @@ df_all.stch %>% filter(runname == "RS1")
 df_all.stch %>% filter(runname == "RS2")
 df_all.stch %>% filter(runname == "RS3")
 
+df_all.stch %>% filter(runname == "RS1_ECRSP")
+df_all.stch %>% filter(runname == "RS2_ECRSP")
+df_all.stch %>% filter(runname == "RS3_ECRSP")
 
 
-results_all %>% filter(runname == "RS1", sim == 0 )  %>% select(runname, year, FR_MA, AL, PR, NC,B,SC, ERC_PR, i)
+
+results_all %>% filter(runname == "RS1", sim == 1 )  %>% select(runname, year, FR_MA, AL, PR, NC,B,SC, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original)
 results_all %>% filter(runname == "RS2", sim == 0 )  %>% select(runname, year, FR_MA, AL, PR, NC,B,SC, ERC_PR, i)
 results_all %>% filter(runname == "RS3", sim == 0 )  %>% select(runname, year, FR_MA, AL, PR, NC,B,SC, ERC_PR, i)
 
+results_all %>% filter(runname == "RS1", sim == 0 )  %>% select(runname, year, FR_MA, AL, PR, NC,B,SC, ERC_PR, i, ERCrate_max, ERCrate_min, i.r)
+results_all %>% filter(runname == "RS2_ECRSP", sim == 0 )  %>% select(runname, year, FR_MA, AL, PR, NC,B,SC, ERC_PR, i, ERCrate_max, ERCrate_min, ECRSP_effective)
 
+results_all %>% filter(year <=2020) %>% 
+  group_by(runname, year) %>% 
+  summarize(binding = sum(ERC!= ERC_original))
 
 
 #*****************************************************
