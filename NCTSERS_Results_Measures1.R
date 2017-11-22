@@ -123,7 +123,9 @@ runs_ECRSP <-   c("RS1_ECRSP",
                   "RS3_ECRSP")
 
 runs_open <-   c( "RS1_open12",
-                  "RS1_open24")
+                  "RS1_open24", 
+                  "RS1_10y",
+                  "RS1_open24_10y")
 
 
 # runs_alt <- c("RS1_SR1EL1.open", "RS1_SR1EL1.PR", "RS1_SR1EL1.s5",
@@ -141,7 +143,9 @@ runs_ECRSP_labels <- c("Assumption Achieved: ECRSP",
                     "High Volatility: ECRSP")
 
 runs_open_labels <- c("open 12-year amort",
-                      "open 24-year amort")
+                      "open 24-year amort",
+                      "10-year smoothing",
+                      "open 24-year amort 10-year smoothing")
 
 
 # runs_alt_labels    <- c("open amortization", 
@@ -231,6 +235,8 @@ df_all.stch %>% filter(runname == "RS3")
 
 df_all.stch %>% filter(runname == "RS1_open12")
 df_all.stch %>% filter(runname == "RS1_open24")
+df_all.stch %>% filter(runname == "RS1_open24_10y")
+df_all.stch %>% filter(runname == "RS1_10y")
 
 
 
@@ -470,6 +476,7 @@ fig_CP.RScompare.FRless <- df_all.stch %>% filter(runname %in% c("RS1","RS2", "R
   mutate(runname = factor(runname, labels = c(lab.RS1, lab.RS2, lab.RS3))) %>%  
   select(runname, year, FR75less, FR60less, FR40less) %>% 
   gather(type, value, -runname, -year) %>% 
+  mutate(type = factor(type, levels = c("FR75less", "FR60less", "FR40less"), labels = c("75%","60%", "40%" ))) %>% 
   ggplot(aes(x = year, y = value, color = type, shape = type)) + 
   theme_bw() + 
   facet_grid(.~runname) +
@@ -478,8 +485,8 @@ fig_CP.RScompare.FRless <- df_all.stch %>% filter(runname %in% c("RS1","RS2", "R
   coord_cartesian(ylim = c(0,100)) + 
   scale_y_continuous(breaks = seq(0,200, 10)) +
   scale_x_continuous(breaks = c(2017, seq(2020, 2040, 5), 2046)) + 
-  scale_color_manual(values = c(RIG.blue, RIG.green, RIG.red),  name = "") + 
-  scale_shape_manual(values = c(17,16, 15),  name = "") +
+  scale_color_manual(values = c(RIG.blue, RIG.green, RIG.red),  name = "Probability of \nfunded ratio below:") + 
+  scale_shape_manual(values = c(17,16, 15),  name = "Probability of \nfunded ratio below:") +
   labs(title = fig.title,
        subtitle = fig.subtitle,
        x = NULL, y = "Probability (%)") + 
@@ -526,10 +533,10 @@ lab.RS3 <- "Scenario 3: \nHigh Volatility"
 
 
 # Deterministic 
-fig.title <- "Employer contribution as a percentage of \nPennsylvania state general fund revenue"
-fig.subtitle <- "Current NCTERS funding policy; Deterministic runs"
+fig.title <- "Employer contribution as a percentage of \nNorth Carolina state general fund revenue"
+fig.subtitle <- "Current NC-TERS funding policy; Deterministic runs"
 fig_fiscal.det <- results_all %>% filter(runname %in% c("RS1","RS2"), sim == 0, year %in% 2017:2046) %>% 
-  mutate(runname = factor(runname, levels = c("RS1", "RS2"), labels = c("Scenario 1: Assumption Achieved: \nDeterministic \nAnnual return = 7.25%",
+  mutate(runname = factor(runname, levels = c("RS1", "RS2"), labels = c("Scenario 1: Assumption Achieved: \nDeterministic \nAnnual return = 7.2%",
                                                                           "Scenario 2: 15 Years of Low Returns: \nDeterministic \nAnnual return = 6.4%"))) %>%  
   select(runname, year, ERC_GF) %>% 
   #mutate(ERChike.det = 0) %>% 
@@ -551,7 +558,7 @@ fig_fiscal.det$data #%>% filter(year == 2045)
 
 
 # Risk of sharp increase in ERC/PR
-fig.title <- "Distribution of employer contribution as a percentage of Pennsylvania state general fund revenue \nunder different return scenarios"
+fig.title <- "Distribution of employer contribution as a percentage of North Carolina state general fund revenue \nunder different return scenarios"
 fig.subtitle <- "Current NCTSERS funding policy"
 fig_fiscal.stch <- df_all.stch %>% filter(runname %in% c("RS1","RS2", "RS3"), year %in% 2016:2046) %>%
   # mutate(ERC_GF.xSchool.q25 = 0.5 * ERC_GF.q25,
@@ -567,7 +574,7 @@ fig_fiscal.stch <- df_all.stch %>% filter(runname %in% c("RS1","RS2", "RS3"), ye
   ggplot(aes(x = year, y = value, color = var, shape = var)) + theme_bw() + 
   facet_grid(. ~ returnScn) + 
   geom_point(size = 1.5) + geom_line() + 
-  coord_cartesian(ylim = c(0,15)) + 
+  coord_cartesian(ylim = c(0,16)) + 
   scale_y_continuous(breaks = seq(0,200, 1)) +
   scale_x_continuous(breaks = c(2017, seq(2020, 2040, 5), 2046)) + 
   scale_color_manual(values = c(RIG.red, RIG.blue, RIG.green, RIG.green, RIG.purple),  name = "") + 
@@ -642,7 +649,7 @@ ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.ERChike.pdf"),  fig_CP.RS1.ERCh
 
 
 # 2. Current policy: alt return scn
-ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.FRless.png"), fig_CP.RScompare.FRless, height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.FRless.png"), fig_CP.RScompare.FRless, height = g.height.1col*0.8, width = g.width.1col*1.35)
 ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.ERChike.png"),fig_CP.RScompare.ERChike, height = g.height.1col, width = g.width.1col)
 
 ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.FRless.pdf"), fig_CP.RScompare.FRless,height = g.height.1col, width = g.width.1col)
