@@ -595,25 +595,23 @@ fig_fiscal.stch$data
 ##                        Summary table                              ####
 #*************************************************************************
 
-# runs_report <- c("RS1_SR1EL1", "RS1_SR1EL0", "RS1_SR0EL1",
-#                  "RS2_SR1EL1", "RS2_SR1EL0", "RS2_SR0EL1",
-#                  "RS3_SR1EL1", "RS3_SR1EL0", "RS3_SR0EL1")
-# 
-# lvl_measures  <- c("FR40less", "ERC_hike")
-# 
-# # Summary tables for the three major risk measures
-# tab_summary <- 
-#   df_all.stch %>% filter(runname %in% c(runs_report ), year == 2046) %>% 
-#   select(runname, FR40less, ERC_hike) %>% 
-#   gather(Measure, value, -runname) %>% 
-#   mutate(runname = factor(runname, levels = runs_report),
-#          Measure = factor(Measure, levels = lvl_measures)) %>% 
-#   spread(runname, value)
-# 
-# tab_summary
-# 
-# write.xlsx2(tab_summary, paste0(Outputs_folder, "tables.xlsx"), sheetName = "summary")
-# 
+runs_report <- c("RS1", "RS2", "RS3")
+
+lvl_measures  <- c("FR40less","FR60less","FR75less", "ERC_hike")
+
+# Summary tables for the three major risk measures
+tab_summary <-
+  df_all.stch %>% filter(runname %in% c(runs_report ), year == 2046) %>%
+  select(runname, FR40less,FR60less, FR75less, ERC_hike) %>%
+  gather(Measure, value, -runname) %>%
+  mutate(runname = factor(runname, levels = runs_report),
+         Measure = factor(Measure, levels = lvl_measures)) %>%
+  spread(runname, value)
+
+tab_summary
+
+write.xlsx2(tab_summary, paste0(Outputs_folder, "tables.xlsx"), sheetName = "summary")
+
 
 
 
