@@ -67,9 +67,10 @@ results_all <- get_results(IO_folder) %>% select(runname, sim, year, everything(
 load("GenFund_proj.RData")
 
 results_all %<>% left_join(df_revenue %>% select(year, GenFund = GenFund.proj)) %>% 
-  mutate(ERC_GF = 100 * ERC/(1e6 * GenFund), 
+  mutate(ERCstate = 0.25 * ERC,
+         ERCstate_GF = 100 * ERCstate/(1e6 * GenFund),
+         ERC_GF = 100 * ERC/(1e6 * GenFund), 
          AL_GF  = 100 * AL/(1e6 * GenFund))
-
 
 #results_all %>% head
 
@@ -180,7 +181,7 @@ df_all.stch <- results_all  %>%
   filter(runname %in% runs_all, sim > 0, year %in% 2017:2046)
 
 df_all.stch %<>%   
-  select(runname, sim, year, FR_MA, AL, MA, ERC, EEC, PR, ERC_PR, ERC_GF) %>%
+  select(runname, sim, year, FR_MA, AL, MA, ERC, EEC, PR, ERC_PR, ERC_GF, ERCstate_GF) %>%
   group_by(runname, sim) %>% 
   mutate(rowNumber = row_number(),
          FR40less  = cumany(FR_MA <= 40),
@@ -189,7 +190,7 @@ df_all.stch %<>%
          FR100more = FR_MA >= 100,
          ERC_high  = cumany(ERC_PR >= 64), 
          ERC_hike     = cumany(na2zero(c(ERC_rate_5y, ERC_PR) - lag(c(ERC_rate_5y, ERC_PR), 5) >= 10))[-(1:5)],  # NA for 2016 value: excludes impact of new amort payment in 2017 
-         ERC_GF_hike  = cumany(na2zero(ERC_GF - lag(ERC_GF, 5) >= 5))
+         ERCstate_GF_hike  = cumany(na2zero(ERCstate_GF - lag(ERCstate_GF, 5) >= 5))
          ) %>% 
   group_by(runname, year) %>% 
   summarize(FR40less  = 100 * sum(FR40less, na.rm = T)/n(),
@@ -212,11 +213,11 @@ df_all.stch %<>%
             ERC_PR.q75 = quantile(ERC_PR, 0.75, na.rm = T),
             ERC_PR.q90 = quantile(ERC_PR, 0.9, na.rm  = T),
             
-            ERC_GF.q10 = quantile(ERC_GF, 0.1, na.rm = T),
-            ERC_GF.q25 = quantile(ERC_GF, 0.25, na.rm = T),
-            ERC_GF.q50 = quantile(ERC_GF, 0.5, na.rm = T),
-            ERC_GF.q75 = quantile(ERC_GF, 0.75, na.rm = T),
-            ERC_GF.q90 = quantile(ERC_GF, 0.9, na.rm = T)
+            ERCstate_GF.q10 = quantile(ERCstate_GF, 0.1, na.rm = T),
+            ERCstate_GF.q25 = quantile(ERCstate_GF, 0.25, na.rm = T),
+            ERCstate_GF.q50 = quantile(ERCstate_GF, 0.5, na.rm = T),
+            ERCstate_GF.q75 = quantile(ERCstate_GF, 0.75, na.rm = T),
+            ERCstate_GF.q90 = quantile(ERCstate_GF, 0.9, na.rm = T)
             
   ) %>% 
   ungroup() %>%
@@ -251,6 +252,20 @@ results_all %>% filter(runname == "RS2_ECRSP", sim == 0 )  %>% select(runname, y
 results_all %>% filter(year <=2020) %>% 
   group_by(runname, year) %>% 
   summarize(binding = sum(ERC!= ERC_original))
+
+
+results_all %>% filter(runname == "RS1", sim == 0)  %>% 
+  mutate(interest = (AL * 0.0725 + (NC - B) * ((1 + 0.0725)^0.5 - 1))/1e6,
+         AL_BOP   = AL/1e6,
+         NC       = NC/1e6,
+         B        = B/1e6,
+         AL_EOP   = AL_BOP + NC - B + interest,
+         PR  = PR/1e6) %>% 
+  select(runname, year, AL_BOP, NC,interest, B,  AL_EOP, PR) %>%
+  filter(year %in% c(2017, 2020,2025, 2035))
+
+
+
 
 
 #*****************************************************
@@ -533,18 +548,18 @@ lab.RS3 <- "Scenario 3: \nHigh Volatility"
 
 
 # Deterministic 
-fig.title <- "Employer contribution as a percentage of \nNorth Carolina state general fund revenue"
+fig.title <- "State employer contribution as a percentage of \nNorth Carolina state general fund revenue"
 fig.subtitle <- "Current NC-TERS funding policy; Deterministic runs"
 fig_fiscal.det <- results_all %>% filter(runname %in% c("RS1","RS2"), sim == 0, year %in% 2017:2046) %>% 
   mutate(runname = factor(runname, levels = c("RS1", "RS2"), labels = c("Scenario 1: Assumption Achieved: \nDeterministic \nAnnual return = 7.2%",
                                                                           "Scenario 2: 15 Years of Low Returns: \nDeterministic \nAnnual return = 6.4%"))) %>%  
-  select(runname, year, ERC_GF) %>% 
+  select(runname, year, ERCstate_GF) %>% 
   #mutate(ERChike.det = 0) %>% 
   # gather(variable, value, -year, -returnScn) %>% 
-  ggplot(aes(x = year, y = ERC_GF, color = runname, shape = runname)) + theme_bw() + 
+  ggplot(aes(x = year, y = ERCstate_GF, color = runname, shape = runname)) + theme_bw() + 
   geom_point(size = 2) + geom_line() + 
-  coord_cartesian(ylim = c(0,10)) + 
-  scale_y_continuous(breaks = seq(0,200, 1)) +
+  coord_cartesian(ylim = c(0,4)) + 
+  scale_y_continuous(breaks = seq(0,200, 0.5)) +
   scale_x_continuous(breaks = c(2017, seq(2020, 2040, 5), 2046)) + 
   scale_color_manual(values = c(RIG.blue, RIG.green, RIG.red, RIG.green, RIG.purple),  name = "") + 
   scale_shape_manual(values = c(17,16, 15, 18, 19),  name = "") +
@@ -558,15 +573,17 @@ fig_fiscal.det$data #%>% filter(year == 2045)
 
 
 # Risk of sharp increase in ERC/PR
-fig.title <- "Distribution of employer contribution as a percentage of North Carolina state general fund revenue \nunder different return scenarios"
+fig.title <- "Distribution of state employer contribution as a percentage of North Carolina state general fund revenue \nunder different return scenarios"
 fig.subtitle <- "Current NCTSERS funding policy"
 fig_fiscal.stch <- df_all.stch %>% filter(runname %in% c("RS1","RS2", "RS3"), year %in% 2016:2046) %>%
   # mutate(ERC_GF.xSchool.q25 = 0.5 * ERC_GF.q25,
   #        ERC_GF.xSchool.q50 = 0.5 * ERC_GF.q50,
   #        ERC_GF.xSchool.q75 = 0.5 * ERC_GF.q75) %>% # about 50% is paid by school districts
-  select(runname, year, ERC_GF.q25, ERC_GF.q50, ERC_GF.q75) %>% 
+  select(runname, year, ERCstate_GF.q25, 
+                        ERCstate_GF.q50, 
+                        ERCstate_GF.q75) %>% 
   gather(var, value, -year, -runname) %>% 
-  mutate(var       = factor(var, levels = c("ERC_GF.q75", "ERC_GF.q50", "ERC_GF.q25"),
+  mutate(var       = factor(var, levels = c("ERCstate_GF.q75", "ERCstate_GF.q50", "ERCstate_GF.q25"),
                                  labels = c("75th percentile", "50th percentile", "25th percentile")),
          returnScn = factor(runname, levels = c("RS1", "RS2", "RS3"), 
                                        labels = c(lab.RS1, lab.RS2, lab.RS3))) %>%  
@@ -574,8 +591,8 @@ fig_fiscal.stch <- df_all.stch %>% filter(runname %in% c("RS1","RS2", "RS3"), ye
   ggplot(aes(x = year, y = value, color = var, shape = var)) + theme_bw() + 
   facet_grid(. ~ returnScn) + 
   geom_point(size = 1.5) + geom_line() + 
-  coord_cartesian(ylim = c(0,16)) + 
-  scale_y_continuous(breaks = seq(0,200, 1)) +
+  coord_cartesian(ylim = c(0,4)) + 
+  scale_y_continuous(breaks = seq(0,200, 0.5)) +
   scale_x_continuous(breaks = c(2017, seq(2020, 2040, 5), 2046)) + 
   scale_color_manual(values = c(RIG.red, RIG.blue, RIG.green, RIG.green, RIG.purple),  name = "") + 
   scale_shape_manual(values = c(17,16, 15, 18, 19),  name = "") +
@@ -586,7 +603,7 @@ fig_fiscal.stch <- df_all.stch %>% filter(runname %in% c("RS1","RS2", "RS3"), ye
   RIG.theme()
 fig_fiscal.stch
 fig_fiscal.stch$data %>% filter(year == 2017)
-fig_fiscal.stch$data %>% filter(year == 2034)
+fig_fiscal.stch$data %>% filter(year == 2027)
 fig_fiscal.stch$data %>% filter(year == 2046)
 
 fig_fiscal.stch$data
