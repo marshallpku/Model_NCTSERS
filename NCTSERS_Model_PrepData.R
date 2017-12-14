@@ -71,9 +71,13 @@ salgrowth.model <-
 
   # salgrowth.model %<>% mutate(salgrowth = salgrowth + 0.0)
 
+f1 <- 0.2
+f2 <- 0.2
 
 f1 <- ifelse(sal.adj, 1 - f1 * f.adj, 1)
 f2 <- ifelse(sal.adj, 1 + f2 * f.adj, 1)
+
+c(seq(f1, f2, length.out = 25))
 
 salgrowth.model %<>% mutate(salgrowth.unadj = salgrowth,
   
@@ -89,6 +93,9 @@ salgrowth.model.init <- salgrowth.model %>% mutate(type = "init")
 salgrowth.model.new  <- salgrowth.model %>% mutate(type = "new") 
 
 salgrowth.model <- bind_rows(salgrowth.model.init, salgrowth.model.new)
+
+
+salgrowth.model
 
 
 

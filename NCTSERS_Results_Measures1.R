@@ -735,9 +735,11 @@ results_all %>% filter(runname == "RS1_SR1EL1", sim == -1) %>%
 
 
 
+#*************************************************************************
+##     Comparision with GASB reporting projections                    ####
+#*************************************************************************
 
-
-
+read_ExcelRange("./Data_inputs/NCTSERS_PlanInfo_AV2016.xlsx", sheet = "cashflow")
 
 
 
