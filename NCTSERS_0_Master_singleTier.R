@@ -22,13 +22,13 @@ load("Results/df_riskFreeALNC.RData")
 
 ## Liability for active members and normal cost (Data_prep)
   # 1. Adjust benefit factor
-    paramlist$bfactor <- paramlist$bfactor *  1.125
+    paramlist$bfactor <- paramlist$bfactor *  1#1.125
 
   # 2. Adjust salary growth rate
-    sal.adj <- TRUE
+    sal.adj <- T
     f.adj <- 1
-    f1 <- 0 #0.3 
-    f2 <- 0 #0.125 
+    f1 <- 0.2 #0.3 
+    f2 <- 0.2 #0.125 
     #
     
 # Across-the-board increase in salary growth rates (NCTSERS_Model_prepData.R)
@@ -39,9 +39,9 @@ load("Results/df_riskFreeALNC.RData")
 
 ## Liabilities for retirees and beneficiaries. 
  # 1. reduce initial benefit
-  init_retirees_all %<>% mutate(benefit = benefit * 0.96 ) # 0.96) 
+  init_retirees_all %<>% mutate(benefit = benefit * 1 ) # 0.96) 
  # 2. increase mortality rates for retirees and survivors. (NCTSERS_Model_Decrements)
-  mortality.adj <-  1.025
+  mortality.adj <-  1#1.025
 
 
 #**********************************************
@@ -267,8 +267,14 @@ var_display.cali <- c("runname", "sim", "year", "FR","FR_MA", "MA", "AA", "AL",
                       "UAAL", "PR.growth", "PVFS", "i.r")
 
 # Calibration
-penSim_results %>% filter(sim == 0) %>% select(one_of(var_display.cali)) %>% mutate(AL.laca = AL.la + AL.ca)
+penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display.cali)) %>% mutate(AL.laca = AL.la + AL.ca)
 penSim_results %>% filter(sim == -1) %>% select(one_of(var_display.cali)) %>% mutate(AL1 = lag(AL + NC - B) * 1.072 ) %>% select(runname, sim, year, FR, AA, AL,  AL1, NC, B)
+
+
+penSim_results %>% filter(sim == 0)  %>% select(one_of(var_display.cali)) %>% mutate(AL.laca = AL.la + AL.ca) %>% 
+  select(runname, sim, year, PVFB, PVFNC, AL.act, NC_PR, PVFS)
+
+
 
 # penSim_results %>% filter(sim == -1) %>% select(one_of(var_display1)) %>% print
 # penSim_results %>% filter(sim == -1) %>% select(one_of(var_display2)) %>% print

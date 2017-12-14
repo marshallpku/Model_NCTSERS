@@ -81,11 +81,11 @@ f2 <- ifelse(sal.adj, 1 + f2 * f.adj, 1)
 
 salgrowth.model %<>% mutate(salgrowth.unadj = salgrowth,
   
-                            adj.factor.add = ifelse(sal.adj, factor_salgrowth.add, 0), # 0.0075,
-                            salgrowth = salgrowth.unadj + adj.factor.add
+                            adj.factor.add  = ifelse(sal.adj, factor_salgrowth.add, 0), # 0.0075,
+                            adj.factor.mult = ifelse(sal.adj, c(seq(f1, f2, length.out = 25), rep(f2, 31)), 1),
                             
-                            # adj.factor = c(seq(f1, f2, length.out = 25), rep(f2, 31)),
-                            # salgrowth = salgrowth.unadj * adj.factor
+                            salgrowth = salgrowth.unadj * adj.factor.mult + adj.factor.add
+                            #salgrowth = salgrowth * adj.factor
                             )
 
 # Different salary growth for initial actives and new actives (for calibration)
