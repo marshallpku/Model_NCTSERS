@@ -51,10 +51,10 @@ salgrowth.model <-
   spread(var, value) %>% 
   mutate(
          salgrowth = 
-           salgrowth.tch   * occupGender["actives", "pct.tch"] + 
-           salgrowth.edu   * occupGender["actives", "pct.edu"] + 
-           salgrowth.law   * occupGender["actives", "pct.law"] + 
-           salgrowth.gen   * occupGender["actives", "pct.gen"]
+           salgrowth.tch  * occupGender["actives", "pct.tch"] + 
+           salgrowth.edu  * occupGender["actives", "pct.edu"] + 
+           salgrowth.law  * occupGender["actives", "pct.law"] + 
+           salgrowth.gen  * occupGender["actives", "pct.gen"]
   ) %>% 
   select(yos, salgrowth)
 
@@ -76,13 +76,13 @@ salgrowth.model <-
 
 f1 <- ifelse(sal.adj, 1 - f1 * f.adj, 1)
 f2 <- ifelse(sal.adj, 1 + f2 * f.adj, 1)
-
+factor_salgrowth.add <- ifelse(sal.adj, factor_salgrowth.add, 0)
 #c(seq(f1, f2, length.out = 25))
 
 salgrowth.model %<>% mutate(salgrowth.unadj = salgrowth,
   
-                            adj.factor.add  = ifelse(sal.adj, factor_salgrowth.add, 0), # 0.0075,
-                            adj.factor.mult = ifelse(sal.adj, c(seq(f1, f2, length.out = 25), rep(f2, 31)), 1),
+                            adj.factor.add  = factor_salgrowth.add, # 0.0075,
+                            adj.factor.mult = c(seq(f1, f2, length.out = 25), rep(f2, 31)),
                             
                             salgrowth = salgrowth.unadj * adj.factor.mult + adj.factor.add
                             #salgrowth = salgrowth * adj.factor
@@ -91,11 +91,9 @@ salgrowth.model %<>% mutate(salgrowth.unadj = salgrowth,
 # Different salary growth for initial actives and new actives (for calibration)
 salgrowth.model.init <- salgrowth.model %>% mutate(type = "init") 
 salgrowth.model.new  <- salgrowth.model %>% mutate(type = "new") 
+salgrowth.model      <- bind_rows(salgrowth.model.init, salgrowth.model.new)
 
-salgrowth.model <- bind_rows(salgrowth.model.init, salgrowth.model.new)
-
-
-salgrowth.model
+# salgrowth.model
 
 
 

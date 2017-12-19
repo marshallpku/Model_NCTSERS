@@ -22,13 +22,13 @@ load("Results/df_riskFreeALNC.RData")
 
 ## Liability for active members and normal cost (Data_prep)
   # 1. Adjust benefit factor
-    paramlist$bfactor <- paramlist$bfactor *  1#1.125
+    paramlist$bfactor <- paramlist$bfactor * 1.125 # 1.125
 
   # 2. Adjust salary growth rate
     sal.adj <- T
     f.adj <- 1
-    f1 <- 0.2 #0.3 
-    f2 <- 0.2 #0.125 
+    f1 <- 0 #0.3 
+    f2 <- 0 #0.125 
     #
     
 # Across-the-board increase in salary growth rates (NCTSERS_Model_prepData.R)
@@ -41,7 +41,7 @@ load("Results/df_riskFreeALNC.RData")
  # 1. reduce initial benefit
   init_retirees_all %<>% mutate(benefit = benefit * 1 ) # 0.96) 
  # 2. increase mortality rates for retirees and survivors. (NCTSERS_Model_Decrements)
-  mortality.adj <-  1#1.025
+  mortality.adj <-  1 #1.025
 
 
 #**********************************************
@@ -210,7 +210,7 @@ liab <- get_indivLab(Tier_select)
 #*********************************************************************************************************
 # 5. Aggregate actuarial liabilities, normal costs and benenfits ####
 #*********************************************************************************************************
-source("NCTSERS_Model_AggLiab.R")
+source("NCTSERS_Model_AggLiab_calib.R")
 gc()
 
 AggLiab <- get_AggLiab(Tier_select,
@@ -219,18 +219,25 @@ AggLiab <- get_AggLiab(Tier_select,
                        liab.disb.ca,
                        pop) 
 
-# AggLiab
-
-#*********************************************************************************************************
-# 6.  Simulation ####
-#*********************************************************************************************************
-source("NCTSERS_Model_Sim.R")
-penSim_results <- run_sim(Tier_select, AggLiab)
-
 
 
 #*********************************************************************************************************
-# 7.  Saving results ####
+# 6. Calibration of benefit for initial retirees ####
+#*********************************************************************************************************
+source("NCTSERS_Model_Calibration.R")
+ 
+AggLiab_calib <- get_calibAggLiab()
+
+
+#*********************************************************************************************************
+# 7.  Simulation ####
+#*********************************************************************************************************
+source("NCTSERS_Model_Sim2.R")
+penSim_results <- run_sim(Tier_select, AggLiab_calib)
+
+
+#*********************************************************************************************************
+# 8.  Saving results ####
 #*********************************************************************************************************
 
 outputs_list <- list(paramlist = paramlist, 
@@ -240,9 +247,8 @@ outputs_list <- list(paramlist = paramlist,
 
 
 #*********************************************************************************************************
-# 8. Showing results ####
+# 9. Showing results ####
 #*********************************************************************************************************
-
 
 var_display1 <- c("Tier", "sim", "year", "FR_MA", "MA", "AL", 
                   "AL.act", "AL.act.laca",  "AL.act.v", "AL.la", "AL.ca", "AL.term", "PVFB", "B", "PVFNC",

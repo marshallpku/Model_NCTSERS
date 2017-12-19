@@ -21,6 +21,8 @@ library("XLConnect") # slow but convenient because it reads ranges; NOTE: I had 
 library(xlsx)
 library("btools")
 library("scales")
+library(gridExtra)
+library(grid)
 
 source("Functions.R")
 
@@ -119,14 +121,22 @@ runs_RS <-   c("RS1",
                "RS3")
 
 
-runs_ECRSP <-   c("RS1_ECRSP",
-                  "RS2_ECRSP",
-                  "RS3_ECRSP")
+runs_ECRSP <-   c("RS1_ECRSP0",
+                  "RS1_ECRSP15",
+                  "RS1_ECRSP30",
+                  "RS2_ECRSP0",
+                  "RS2_ECRSP15",
+                  "RS2_ECRSP30",
+                  "RS3_ECRSP0",
+                  "RS3_ECRSP1",
+                  "RS3_ECRSP30")
 
 runs_open <-   c( "RS1_open12",
                   "RS1_open24", 
                   "RS1_10y",
                   "RS1_open24_10y")
+
+
 
 
 # runs_alt <- c("RS1_SR1EL1.open", "RS1_SR1EL1.PR", "RS1_SR1EL1.s5",
@@ -139,9 +149,15 @@ runs_RS_labels <- c("Assumption Achieved: Baseline",
                      "15 Years of Low Returns",
                      "High Volatility")
 
-runs_ECRSP_labels <- c("Assumption Achieved: ECRSP",
-                    "15 Years of Low Returns: ECRSP",
-                    "High Volatility: ECRSP")
+runs_ECRSP_labels <- c("RS1, ECRSP0",
+                       "RS1, ECRSP15",
+                       "RS1, ECRSP30",
+                       "RS2, ECRSP0",
+                       "RS2, ECRSP15",
+                       "RS2, ECRSP30",
+                       "RS3, ECRSP0",
+                       "RS3, ECRSP15",
+                       "RS3, ECRSP30")
 
 runs_open_labels <- c("open 12-year amort",
                       "open 24-year amort",
@@ -242,7 +258,7 @@ df_all.stch %>% filter(runname == "RS1_10y")
 
 
 
-results_all %>% filter(runname == "RS1", sim == 0)  %>% select(runname, year, FR_MA, AL,MA, AA, PR, NC,B,SC, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original, Amort_basis, i.r, NC_PR, SC_PR)
+results_all %>% filter(runname == "RS1", sim == 1)  %>% select(runname, year, FR_MA, AL,MA, AA, PR, NC,B,SC, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original, Amort_basis, i.r, NC_PR, SC_PR)
 results_all %>% filter(runname == "RS2", sim == 0 )  %>% select(runname, year, FR_MA, AL, PR, NC,B,SC, ERC_PR, i)
 results_all %>% filter(runname == "RS3", sim == 0 )  %>% select(runname, year, FR_MA, AL, PR, NC,B,SC, ERC_PR, i)
 
@@ -601,9 +617,9 @@ fig_fiscal.stch <- df_all.stch %>% filter(runname %in% c("RS1","RS2", "RS3"), ye
        x = NULL, y = "Percent of general fund revenue (%)") + 
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3))+
   RIG.theme()
-fig_fiscal.stch
+fig_fiscal.stch$data
 fig_fiscal.stch$data %>% filter(year == 2017)
-fig_fiscal.stch$data %>% filter(year == 2027)
+x <- fig_fiscal.stch$data %>% filter(year == 2020)
 fig_fiscal.stch$data %>% filter(year == 2046)
 
 fig_fiscal.stch$data
@@ -630,6 +646,268 @@ tab_summary
 write.xlsx2(tab_summary, paste0(Outputs_folder, "tables.xlsx"), sheetName = "summary")
 
 
+#*************************************************************************
+##                        Analysis of ECRSP                           ####
+#*************************************************************************
+
+# df_all.stch %>% filter(runname == "RS1")        %>% filter(year <=2031)
+# df_all.stch %>% filter(runname == "RS1_ECRSP0") %>% filter(year <=2031)
+# df_all.stch %>% filter(runname == "RS1_ECRSP15")%>% filter(year <=2031)
+# df_all.stch %>% filter(runname == "RS1_ECRSP30")%>% filter(year <=2031)
+# 
+# df_all.stch %>% filter(runname == "RS2")        %>% filter(year <=2031)
+# df_all.stch %>% filter(runname == "RS2_ECRSP0") %>% filter(year <=2031)
+# df_all.stch %>% filter(runname == "RS2_ECRSP15")%>% filter(year <=2031)
+# df_all.stch %>% filter(runname == "RS2_ECRSP30")%>% filter(year <=2031)
+# 
+
+
+
+# Deterministic results
+
+# results_all %<>% mutate(ECRSP_effect = ERC - ERC_original) 
+# 
+# results_all %>% filter(runname == "RS1", sim == 0)  %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original, ECRSP_effect, Amort_basis, i.r, NC_PR, SC_PR)
+# results_all %>% filter(runname == "RS1_ECRSP0", sim == 0)  %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original,ERC_original,ECRSP_effect, Amort_basis, i.r, NC_PR, SC_PR)
+# 
+# results_all %>% filter(runname == "RS2", sim == 0)         %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original,ECRSP_effect, Amort_basis, i.r, NC_PR, SC_PR)
+# results_all %>% filter(runname == "RS2_ECRSP0",  sim == 0) %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original,ECRSP_effect, Amort_basis, i.r, NC_PR, SC_PR)
+# results_all %>% filter(runname == "RS2_ECRSP15", sim == 0) %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original,ECRSP_effect, Amort_basis, i.r, NC_PR, SC_PR)
+# 
+# 
+# results_all %>% filter(runname == "RS1_ECRSP30", sim == 1)  %>% select(runname, year, FR_MA, AL,MA, AA, PR, NC,B,SC, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original, Amort_basis, i.r, NC_PR, SC_PR)
+# 
+df_ECRSP_det <-
+  results_all %>% filter(runname %in% c("RS2_ECRSP0", "RS2_ECRSP15"), sim == 0) %>%
+  select(runname, year, FR_MA, ERC_PR, ERC)
+  
+sum(df_ECRSP_det[1:15, "ERC"]/(1+0.072)^(0:14))
+sum(df_ECRSP_det[31:45, "ERC"]/(1+0.072)^(0:14))
+
+
+
+fig.title <- "Funded ratio"
+fig.subtitle <- NULL
+fig_ECRSP_det_FR <- 
+  df_ECRSP_det %>% 
+  mutate(runname = factor(runname, levels = c("RS2_ECRSP15", "RS2_ECRSP0"),
+                                   labels = c("15 years of ECRSP", "No ECRSP"))) %>% 
+  ggplot(aes(x = year, y = FR_MA, color = runname, shape =  runname)) + theme_bw() + 
+  geom_point(size = 1.5) + geom_line() + 
+  geom_hline(yintercept = 100,  linetype = 2, size = 1) +
+  geom_vline(xintercept = 2031, linetype = 3) +
+  coord_cartesian(ylim = c(60,120)) + 
+  scale_y_continuous(breaks = seq(0,200, 10)) +
+  scale_x_continuous(breaks = c(2017, seq(2020, 2040, 5), 2046)) + 
+  scale_color_manual(values = c(RIG.red, RIG.blue, RIG.green, RIG.green, RIG.purple),  name = "") + 
+  scale_shape_manual(values = c(17,16, 15, 18, 19),  name = "") + 
+  RIG.theme() +
+  labs(title    = fig.title,
+       subtitle = fig.subtitle,
+       x = NULL, y = "Percent (%)") + 
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3))+
+  theme(legend.position = "none")
+fig_ECRSP_det_FR  
+
+
+fig.title <- "Employer contribution rate"
+fig.subtitle <- NULL
+fig_ECRSP_det_ERC <- 
+  df_ECRSP_det %>% 
+  mutate(runname = factor(runname, levels = c("RS2_ECRSP15", "RS2_ECRSP0" ),
+                          labels = c("15 years of ECRSP", "No ECRSP"))) %>% 
+  ggplot(aes(x = year, y = ERC_PR, color = runname, shape =  runname)) + theme_bw() + 
+  geom_point(size = 1.5) + geom_line() + 
+  geom_vline(xintercept = 2031, linetype = 3) +
+  coord_cartesian(ylim = c(0,30)) + 
+  scale_y_continuous(breaks = seq(0,200, 5)) +
+  scale_x_continuous(breaks = c(2017, seq(2020, 2040, 5), 2046)) + 
+  scale_color_manual(values = c(RIG.red, RIG.blue, RIG.green, RIG.green, RIG.purple),  name = "") + 
+  scale_shape_manual(values = c(17,16, 15, 18, 19),  name = "") + 
+  RIG.theme() +
+  labs(title    = fig.title,
+       subtitle = fig.subtitle,
+       x = NULL, y = "Percent of payroll(%)") + 
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3))
+fig_ECRSP_det_ERC  
+
+
+fig_ECRSP_det <- grid.arrange(fig_ECRSP_det_FR, fig_ECRSP_det_ERC, ncol = 2, widths = c(0.75, 1),
+                              top = "Impact of 15 years of ECRSP on NC-TSERS under deterministic run of Scenario 2: 15 Years of Low Returns")
+fig_ECRSP_det %>% grid.draw()
+ggsave(file = paste0(Outputs_folder, "fig.ECRSP_det.png"), fig_ECRSP_det, height = g.height.2col, width = g.width.2col)
+
+
+
+# Question 1: how likely the ECRSP limit will be triggered? 
+
+results_all %>% 
+  filter(runname %in% c("RS1", "RS2"), year <=2020) %>% 
+  group_by(runname, year) %>%
+  mutate(ECRSPon      = ERC != ERC_original,
+         ECRSP_effect = ERC_PR - ERC.original_PR) %>%
+  select(runname, year, ECRSPon, ECRSP_effect, ERC, ERC_original) %>% 
+  summarize(ECRSPon = sum(ECRSPon)/n(),
+            ECRSP_effect_p25 = quantile(ECRSP_effect, 0.25),
+            ECRSP_effect_p50 = quantile(ECRSP_effect, 0.50),
+            ECRSP_effect_p75 = quantile(ECRSP_effect, 0.75))
+  
+  
+  
+results_all %>% 
+  filter(runname %in% c("RS1", "RS1_ECRSP15"), year <=2031) %>% 
+  group_by(runname, sim) %>% 
+  mutate(ERC_hike = cumany(na2zero(c(ERC_rate_5y, ERC_PR) - lag(c(ERC_rate_5y, ERC_PR), 5) >= 10))[-(1:5)]) %>% 
+  group_by(runname, year) %>%
+  mutate(ECRSPon      = ERC != ERC_original,
+         ECRSP_effect = ERC_PR - ERC.original_PR) %>%
+  select(runname, year, ECRSPon, ECRSP_effect, ERC, ERC_original, ERC_hike) %>% 
+  summarize(ECRSPon = sum(ECRSPon)/n(),
+            ERC_hike  = 100 * sum(ERC_hike, na.rm = T)/n(),
+            ECRSP_effect_p25 = quantile(ECRSP_effect, 0.25),
+            ECRSP_effect_p50 = quantile(ECRSP_effect, 0.50),
+            ECRSP_effect_p75 = quantile(ECRSP_effect, 0.75))
+
+
+
+
+results_all %>% 
+  filter(runname %in% c("RS2_ECRSP0", "RS2_ECRSP15"), year <=2031) %>% 
+  group_by(runname, sim) %>% 
+  mutate(ERC_hike = cumany(na2zero(c(ERC_rate_5y, ERC_PR) - lag(c(ERC_rate_5y, ERC_PR), 5) >= 10))[-(1:5)]) %>% 
+  group_by(runname, year) %>%
+  mutate(ECRSPon      = ERC != ERC_original,
+         ECRSP_effect = ERC_PR - ERC.original_PR) %>%
+  select(runname, year, ECRSPon, ECRSP_effect, ERC, ERC_original, ERC_hike) %>% 
+  summarize(ECRSPon = sum(ECRSPon)/n(),
+            ERC_hike  = 100 * sum(ERC_hike, na.rm = T)/n(),
+            ECRSP_effect_p25 = quantile(ECRSP_effect, 0.25),
+            ECRSP_effect_p50 = quantile(ECRSP_effect, 0.50),
+            ECRSP_effect_p75 = quantile(ECRSP_effect, 0.75))
+
+
+
+df <- results_all %>% 
+  filter(runname %in% c("RS2_ECRSP0", "RS2_ECRSP15"), year <=2031) %>% 
+  group_by(runname, sim) %>% 
+  mutate(FR60less  = cumany(FR_MA <= 60),
+         FR75less  = cumany(FR_MA <= 75),
+         ERC_hike = cumany(na2zero(c(ERC_rate_5y, ERC_PR) - lag(c(ERC_rate_5y, ERC_PR), 5) >= 10))[-(1:5)]) %>% 
+  group_by(runname, year) %>%
+  mutate(ECRSPon      = ERC != ERC_original,
+         ECRSP_effect = ERC_PR - ERC.original_PR) %>%
+  #select(runname, year, ECRSPon, ECRSP_effect, ERC, ERC_original, ERC_hike, ERC_PR, FR_MA) %>% 
+  summarize(ECRSPon = 100*sum(ECRSPon)/n(),
+            FR60less  = 100 * sum(FR60less, na.rm = T)/n(),
+            FR75less  = 100 * sum(FR75less, na.rm = T)/n(),
+            ERC_hike  = 100 * sum(ERC_hike, na.rm = T)/n(),
+            ERC_PR_p50 = quantile(ERC_PR, 0.5),
+            FR_MA_p50 =  quantile(FR_MA, 0.5),
+            ECRSP_effect_p25 = quantile(ECRSP_effect, 0.25),
+            ECRSP_effect_p50 = quantile(ECRSP_effect, 0.50),
+            ECRSP_effect_p75 = quantile(ECRSP_effect, 0.75))
+
+
+df
+
+
+fig.title <- "Median Funded ratio"
+fig.subtitle <- NULL
+fig_ECRSP_FR <- 
+df %>% 
+  ungroup %>% 
+  mutate(runname = factor(runname, levels = c("RS2_ECRSP15", "RS2_ECRSP0" ),
+                          labels = c("15 years of ECRSP", "No ECRSP"))) %>% 
+  ggplot(aes(x = year, y = FR_MA_p50, color = runname, shape =  runname)) + theme_bw() + 
+  geom_point(size = 1.5) + geom_line() + 
+  coord_cartesian(ylim = c(50,120)) + 
+  scale_y_continuous(breaks = seq(0,200, 10)) +
+  scale_x_continuous(breaks = c(2017, 2018, seq(2020, 2030, 2), 2031)) + 
+  scale_color_manual(values = c(RIG.red, RIG.blue, RIG.green, RIG.green, RIG.purple),  name = "") + 
+  scale_shape_manual(values = c(17,16, 15, 18, 19),  name = "") + 
+  RIG.theme() +
+  labs(title    = fig.title,
+       subtitle = fig.subtitle,
+       x = NULL, y = "Percent (%)") + 
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3))
+fig_ECRSP_FR
+
+
+
+
+
+fig.title <- "Probability of sharp increase \nin employer contribution rate"
+fig.subtitle <- NULL
+fig_ECRSP_ERChike <- df %>% 
+  ungroup %>% 
+  mutate(runname = factor(runname, levels = c("RS2_ECRSP15", "RS2_ECRSP0" ),
+                          labels = c("15 years of ECRSP", "No ECRSP"))) %>% 
+  ggplot(aes(x = year, y = ERC_hike, color = runname, shape =  runname)) + theme_bw() + 
+  geom_point(size = 1.5) + geom_line() + 
+  coord_cartesian(ylim = c(0,100)) + 
+  scale_y_continuous(breaks = seq(0,200, 10)) +
+  scale_x_continuous(breaks = c(2017, seq(2020, 2028, 2), 2031)) + 
+  scale_color_manual(values = c(RIG.red, RIG.blue, RIG.green, RIG.green, RIG.purple),  name = "") + 
+  scale_shape_manual(values = c(17,16, 15, 18, 19),  name = "") + 
+  RIG.theme() + 
+  theme(legend.position = "none")+
+  labs(title    = fig.title,
+       subtitle = fig.subtitle,
+       x = NULL, y = "Percent (%)") + 
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3))
+
+
+fig.title <- "Probability of \nlow funded ratio below 60%"
+fig.subtitle <- NULL
+fig_ECRSP_FR60 <- df %>% 
+  ungroup %>% 
+  mutate(runname = factor(runname, levels = c("RS2_ECRSP15", "RS2_ECRSP0" ),
+                          labels = c("15 years of ECRSP", "No ECRSP"))) %>% 
+  ggplot(aes(x = year, y = FR60less, color = runname, shape =  runname)) + theme_bw() + 
+  geom_point(size = 1.5) + geom_line() + 
+  coord_cartesian(ylim = c(0,40)) + 
+  scale_y_continuous(breaks = seq(0,200, 5)) +
+  scale_x_continuous(breaks = c(2017, seq(2020, 2028, 2), 2031)) + 
+  scale_color_manual(values = c(RIG.red, RIG.blue, RIG.green, RIG.green, RIG.purple),  name = "") + 
+  scale_shape_manual(values = c(17,16, 15, 18, 19),  name = "") + 
+  RIG.theme() +
+  theme(legend.position = "none")+
+  labs(title    = fig.title,
+       subtitle = fig.subtitle,
+       x = NULL, y = "Percent (%)") + 
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3))
+fig_ECRSP_FR60
+
+
+fig.title <- "Median \nEmployer contribution"
+fig.subtitle <- NULL
+fig_ECRSP_ERC <- df %>% 
+  ungroup %>% 
+  mutate(runname = factor(runname, levels = c("RS2_ECRSP15", "RS2_ECRSP0" ),
+                          labels = c("15 years of ECRSP", "No ECRSP"))) %>% 
+  ggplot(aes(x = year, y = ERC_PR_p50, color = runname, shape =  runname)) + theme_bw() + 
+  geom_point(size = 1.5) + geom_line() + 
+  coord_cartesian(ylim = c(0,35)) + 
+  scale_y_continuous(breaks = seq(0,200, 5)) +
+  scale_x_continuous(breaks = c(2017, seq(2020, 2028, 2), 2031)) + 
+  scale_color_manual(values = c(RIG.red, RIG.blue, RIG.green, RIG.green, RIG.purple),  name = "") + 
+  scale_shape_manual(values = c(17,16, 15, 18, 19),  name = "") + 
+  RIG.theme() +
+  labs(title    = fig.title,
+       subtitle = fig.subtitle,
+       x = NULL, y = "Percent of payroll(%)") + 
+  guides(color = guide_legend(keywidth = 1.5, keyheight = 3))
+
+  
+fig_ECRSP_ERChike
+fig_ECRSP_FR60
+fig_ECRSP_ERC
+
+fig_ECRSP_stch <- grid.arrange(fig_ECRSP_ERChike, fig_ECRSP_FR60, fig_ECRSP_ERC, ncol = 3, widths = c(0.67,0.67, 1),
+                               top = "Impact of 15 years of ECRSP on NC-TSERS \nStochastic run; Scenario 2: 15 Years of Low Returns"
+                               )
+fig_ECRSP_stch %>% grid.draw()
+ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.png"), fig_ECRSP_stch, height = g.height.3col, width = g.width.3col)
 
 
 
@@ -681,6 +959,11 @@ ggsave(file = paste0(Outputs_folder, "fig9.fiscal.stch.pdf"), fig_fiscal.stch, h
 
 ggsave(file = paste0(Outputs_folder, "fig11.projGenFun.png"),  fig_projGenFund,  height = g.height.1col, width = g.width.1col)
 ggsave(file = paste0(Outputs_folder, "fig11.projGenFun.pdf"),  fig_projGenFund,  height = g.height.1col, width = g.width.1col)
+
+
+# ECRSP
+ggsave(file = paste0(Outputs_folder, "fig.ECRSP_det.png"), fig_ECRSP_det, height = g.height.2col, width = g.width.2col)
+ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.png"), fig_ECRSP_stch, height = g.height.3col, width = g.width.3col)
 
 
 
