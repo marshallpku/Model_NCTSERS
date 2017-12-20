@@ -619,7 +619,7 @@ fig_fiscal.stch <- df_all.stch %>% filter(runname %in% c("RS1","RS2", "RS3"), ye
   RIG.theme()
 fig_fiscal.stch$data
 fig_fiscal.stch$data %>% filter(year == 2017)
-x <- fig_fiscal.stch$data %>% filter(year == 2020)
+x <- fig_fiscal.stch$data 
 fig_fiscal.stch$data %>% filter(year == 2046)
 
 fig_fiscal.stch$data
@@ -670,9 +670,9 @@ write.xlsx2(tab_summary, paste0(Outputs_folder, "tables.xlsx"), sheetName = "sum
 # results_all %>% filter(runname == "RS1", sim == 0)  %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original, ECRSP_effect, Amort_basis, i.r, NC_PR, SC_PR)
 # results_all %>% filter(runname == "RS1_ECRSP0", sim == 0)  %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original,ERC_original,ECRSP_effect, Amort_basis, i.r, NC_PR, SC_PR)
 # 
-# results_all %>% filter(runname == "RS2", sim == 0)         %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original,ECRSP_effect, Amort_basis, i.r, NC_PR, SC_PR)
-# results_all %>% filter(runname == "RS2_ECRSP0",  sim == 0) %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original,ECRSP_effect, Amort_basis, i.r, NC_PR, SC_PR)
-# results_all %>% filter(runname == "RS2_ECRSP15", sim == 0) %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original,ECRSP_effect, Amort_basis, i.r, NC_PR, SC_PR)
+results_all %>% filter(runname == "RS2", sim == 1)         %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original, Amort_basis, i.r, NC_PR, SC_PR)
+results_all %>% filter(runname == "RS2_ECRSP0",  sim == 1) %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original, Amort_basis, i.r, NC_PR, SC_PR)
+results_all %>% filter(runname == "RS2_ECRSP15", sim == 0) %>% select(runname, year, FR_MA, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original, Amort_basis, i.r, NC_PR, SC_PR)
 # 
 # 
 # results_all %>% filter(runname == "RS1_ECRSP30", sim == 1)  %>% select(runname, year, FR_MA, AL,MA, AA, PR, NC,B,SC, ERC_PR, i, ERCrate_max, ERCrate_min, ERC, ERC_original, Amort_basis, i.r, NC_PR, SC_PR)
@@ -732,10 +732,12 @@ fig_ECRSP_det_ERC <-
 fig_ECRSP_det_ERC  
 
 
+
+det_title <- textGrob("Impact of 15 years of ECRSP on NC-TSERS \ndeterministic run; Scenario 2: 15 Years of Low Returns",
+                      gp = gpar(fontsize = 14,fontface = 'bold')) #col = 'blue', fontface = 'bold'))
 fig_ECRSP_det <- grid.arrange(fig_ECRSP_det_FR, fig_ECRSP_det_ERC, ncol = 2, widths = c(0.75, 1),
-                              top = "Impact of 15 years of ECRSP on NC-TSERS under deterministic run of Scenario 2: 15 Years of Low Returns")
+                              top = det_title)
 fig_ECRSP_det %>% grid.draw()
-ggsave(file = paste0(Outputs_folder, "fig.ECRSP_det.png"), fig_ECRSP_det, height = g.height.2col, width = g.width.2col)
 
 
 
@@ -836,7 +838,7 @@ fig_ECRSP_FR
 
 
 
-fig.title <- "Probability of sharp increase \nin employer contribution rate"
+fig.title <- "Probability of sharp increase \nin employer contribution rate*"
 fig.subtitle <- NULL
 fig_ECRSP_ERChike <- df %>% 
   ungroup %>% 
@@ -857,7 +859,7 @@ fig_ECRSP_ERChike <- df %>%
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3))
 
 
-fig.title <- "Probability of \nlow funded ratio below 60%"
+fig.title <- "Probability of \n funded ratio below 60%**"
 fig.subtitle <- NULL
 fig_ECRSP_FR60 <- df %>% 
   ungroup %>% 
@@ -899,15 +901,27 @@ fig_ECRSP_ERC <- df %>%
   guides(color = guide_legend(keywidth = 1.5, keyheight = 3))
 
   
-fig_ECRSP_ERChike
+fig_ECRSP_ERChike$data
 fig_ECRSP_FR60
 fig_ECRSP_ERC
 
+
+
+stch_title <- textGrob("Impact of 15 years of ECRSP on NC-TSERS \nStochastic run; Scenario 2: 15 Years of Low Returns",
+                      gp = gpar(fontsize = 14,fontface = 'bold')) #col = 'blue', fontface = 'bold'))
+stch_note_l1 <- "*Probability of employer contribution rising more than 10% of payroll in a 5-year period anytime up to the given year.\n"
+stch_note_l2 <- "**Probability of funded ratio below 60% anytime up to the given year."
+stch_note    <- textGrob(paste0(stch_note_l1, stch_note_l2),
+                         gp = gpar(fontsize = 10), x= 0.05, hjust = 0) #col = 'blue', fontface = 'bold'))
+
+
 fig_ECRSP_stch <- grid.arrange(fig_ECRSP_ERChike, fig_ECRSP_FR60, fig_ECRSP_ERC, ncol = 3, widths = c(0.67,0.67, 1),
-                               top = "Impact of 15 years of ECRSP on NC-TSERS \nStochastic run; Scenario 2: 15 Years of Low Returns"
+                               top = stch_title, bottom = stch_note
                                )
 fig_ECRSP_stch %>% grid.draw()
-ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.png"), fig_ECRSP_stch, height = g.height.3col, width = g.width.3col)
+
+# ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.png"), fig_ECRSP_stch, height = g.height.3col*1.1, width = g.width.3col)
+# ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.pdf"), fig_ECRSP_stch, height = g.height.3col*1.1, width = g.width.3col)
 
 
 
@@ -945,7 +959,7 @@ ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.ERChike.pdf"),  fig_CP.RS1.ERCh
 ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.FRless.png"), fig_CP.RScompare.FRless, height = g.height.1col*0.8, width = g.width.1col*1.35)
 ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.ERChike.png"),fig_CP.RScompare.ERChike, height = g.height.1col, width = g.width.1col)
 
-ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.FRless.pdf"), fig_CP.RScompare.FRless,height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.FRless.pdf"), fig_CP.RScompare.FRless,height = g.height.1col*0.8, width = g.width.1col*1.35)
 ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.ERChike.pdf"),fig_CP.RScompare.ERChike, height = g.height.1col, width = g.width.1col)
 
 
@@ -962,9 +976,13 @@ ggsave(file = paste0(Outputs_folder, "fig11.projGenFun.pdf"),  fig_projGenFund, 
 
 
 # ECRSP
+#ggsave(file = paste0(Outputs_folder, "fig.ECRSP_det.png"), fig_ECRSP_det, height = g.height.2col, width = g.width.2col)
+#ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.png"), fig_ECRSP_stch, height = g.height.3col, width = g.width.3col)
 ggsave(file = paste0(Outputs_folder, "fig.ECRSP_det.png"), fig_ECRSP_det, height = g.height.2col, width = g.width.2col)
-ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.png"), fig_ECRSP_stch, height = g.height.3col, width = g.width.3col)
+ggsave(file = paste0(Outputs_folder, "fig.ECRSP_det.pdf"), fig_ECRSP_det, height = g.height.2col, width = g.width.2col)
 
+ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.png"), fig_ECRSP_stch, height = g.height.3col*1.1, width = g.width.3col)
+ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.pdf"), fig_ECRSP_stch, height = g.height.3col*1.1, width = g.width.3col)
 
 
 
