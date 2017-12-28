@@ -943,32 +943,32 @@ g.width.3col  <- 15*0.8
 ggsave(file = paste0(Outputs_folder, "distReturn.png"),   fig_distReturn, height = g.height.1col, width = g.width.1col)
 
 # 1. Current policy: assumption achieved
-ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.FRdist.png"),   fig_CP.RS1.FRdist,  height = g.height.1col, width = g.width.1col)
-ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.FR40less.png"), fig_CP.RS1.FR40less,height = g.height.1col, width = g.width.1col*1.1)
-ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.ERCdist.png"),  fig_CP.RS1.ERCdist, height = g.height.1col, width = g.width.1col)
-ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.ERChike.png"),  fig_CP.RS1.ERChike, height = g.height.1col, width = g.width.1col*0.8)
+ggsave(file = paste0(Outputs_folder, "fig1.CP.RS1.FRdist.png"),   fig_CP.RS1.FRdist,  height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig2.CP.RS1.FR40less.png"), fig_CP.RS1.FR40less,height = g.height.1col, width = g.width.1col*1.1)
+ggsave(file = paste0(Outputs_folder, "fig3.CP.RS1.ERCdist.png"),  fig_CP.RS1.ERCdist, height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig4.CP.RS1.ERChike.png"),  fig_CP.RS1.ERChike, height = g.height.1col, width = g.width.1col*0.8)
 
-ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.FRdist.pdf"),   fig_CP.RS1.FRdist,  height = g.height.1col, width = g.width.1col)
-ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.FR40less.pdf"), fig_CP.RS1.FR40less,height = g.height.1col, width = g.width.1col*1.1)
-ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.ERCdist.pdf"),  fig_CP.RS1.ERCdist, height = g.height.1col, width = g.width.1col)
-ggsave(file = paste0(Outputs_folder, "fig.CP.RS1.ERChike.pdf"),  fig_CP.RS1.ERChike, height = g.height.1col, width = g.width.1col*0.8)
+ggsave(file = paste0(Outputs_folder, "fig1.CP.RS1.FRdist.pdf"),   fig_CP.RS1.FRdist,  height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig2.CP.RS1.FR40less.pdf"), fig_CP.RS1.FR40less,height = g.height.1col, width = g.width.1col*1.1)
+ggsave(file = paste0(Outputs_folder, "fig3.CP.RS1.ERCdist.pdf"),  fig_CP.RS1.ERCdist, height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig4.CP.RS1.ERChike.pdf"),  fig_CP.RS1.ERChike, height = g.height.1col, width = g.width.1col*0.8)
 
 
 
 # 2. Current policy: alt return scn
-ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.FRless.png"), fig_CP.RScompare.FRless, height = g.height.1col*0.8, width = g.width.1col*1.35)
-ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.ERChike.png"),fig_CP.RScompare.ERChike, height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig5.CP.RScompare.FRless.png"), fig_CP.RScompare.FRless, height = g.height.1col*0.8, width = g.width.1col*1.35)
+ggsave(file = paste0(Outputs_folder, "fig6.CP.RScompare.ERChike.png"),fig_CP.RScompare.ERChike, height = g.height.1col, width = g.width.1col)
 
-ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.FRless.pdf"), fig_CP.RScompare.FRless,height = g.height.1col*0.8, width = g.width.1col*1.35)
-ggsave(file = paste0(Outputs_folder, "fig.CP.RScompare.ERChike.pdf"),fig_CP.RScompare.ERChike, height = g.height.1col, width = g.width.1col)
+ggsave(file = paste0(Outputs_folder, "fig5.CP.RScompare.FRless.pdf"), fig_CP.RScompare.FRless,height = g.height.1col*0.8, width = g.width.1col*1.35)
+ggsave(file = paste0(Outputs_folder, "fig6.CP.RScompare.ERChike.pdf"),fig_CP.RScompare.ERChike, height = g.height.1col, width = g.width.1col)
 
 
 # 3. Fiscal
-ggsave(file = paste0(Outputs_folder, "fig8.fiscal.det.png"),  fig_fiscal.det, height = g.height.1col, width = g.width.1col*1.1)
-ggsave(file = paste0(Outputs_folder, "fig9.fiscal.stch.png"), fig_fiscal.stch, height = g.height.3col*0.9*1.15, width = g.width.3col*0.9)
+ggsave(file = paste0(Outputs_folder, "fig9.fiscal.det.png"),  fig_fiscal.det, height = g.height.1col, width = g.width.1col*1.1)
+ggsave(file = paste0(Outputs_folder, "fig10.fiscal.stch.png"), fig_fiscal.stch, height = g.height.3col*0.9*1.15, width = g.width.3col*0.9)
 
-ggsave(file = paste0(Outputs_folder, "fig8.fiscal.det.pdf"),  fig_fiscal.det, height = g.height.1col, width = g.width.1col*1.1)
-ggsave(file = paste0(Outputs_folder, "fig9.fiscal.stch.pdf"), fig_fiscal.stch, height = g.height.3col*0.9*1.15, width = g.width.3col*0.9)
+ggsave(file = paste0(Outputs_folder, "fig9.fiscal.det.pdf"),  fig_fiscal.det, height = g.height.1col, width = g.width.1col*1.1)
+ggsave(file = paste0(Outputs_folder, "fig10.fiscal.stch.pdf"), fig_fiscal.stch, height = g.height.3col*0.9*1.15, width = g.width.3col*0.9)
 
 
 ggsave(file = paste0(Outputs_folder, "fig11.projGenFun.png"),  fig_projGenFund,  height = g.height.1col, width = g.width.1col)
@@ -978,11 +978,11 @@ ggsave(file = paste0(Outputs_folder, "fig11.projGenFun.pdf"),  fig_projGenFund, 
 # ECRSP
 #ggsave(file = paste0(Outputs_folder, "fig.ECRSP_det.png"), fig_ECRSP_det, height = g.height.2col, width = g.width.2col)
 #ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.png"), fig_ECRSP_stch, height = g.height.3col, width = g.width.3col)
-ggsave(file = paste0(Outputs_folder, "fig.ECRSP_det.png"), fig_ECRSP_det, height = g.height.2col, width = g.width.2col)
-ggsave(file = paste0(Outputs_folder, "fig.ECRSP_det.pdf"), fig_ECRSP_det, height = g.height.2col, width = g.width.2col)
+ggsave(file = paste0(Outputs_folder, "fig7.ECRSP_det.png"), fig_ECRSP_det, height = g.height.2col, width = g.width.2col)
+ggsave(file = paste0(Outputs_folder, "fig7.ECRSP_det.pdf"), fig_ECRSP_det, height = g.height.2col, width = g.width.2col)
 
-ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.png"), fig_ECRSP_stch, height = g.height.3col*1.1, width = g.width.3col)
-ggsave(file = paste0(Outputs_folder, "fig.ECRSP_stch.pdf"), fig_ECRSP_stch, height = g.height.3col*1.1, width = g.width.3col)
+ggsave(file = paste0(Outputs_folder, "fig8.ECRSP_stch.png"), fig_ECRSP_stch, height = g.height.3col*1.1, width = g.width.3col)
+ggsave(file = paste0(Outputs_folder, "fig8.ECRSP_stch.pdf"), fig_ECRSP_stch, height = g.height.3col*1.1, width = g.width.3col)
 
 
 
