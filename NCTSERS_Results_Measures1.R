@@ -23,8 +23,10 @@ library("btools")
 library("scales")
 library(gridExtra)
 library(grid)
+library(plotly)
 
 source("Functions.R")
+
 
 
 
@@ -1045,10 +1047,52 @@ read_ExcelRange(file = "./Data_inputs/NCTSERS_PlanInfo_AV2016.xlsx", sheet = "GA
 
 
 
+fig.title <- "Distribution of funded ratios across simulations"
+fig.subtitle <- "Current NC-TSERS funding policy; Scenario 1: Assumption Achieved" 
+fig_CP.RS1.FRdistx <- df_all.stch %>% filter(runname %in% "RS1") %>% 
+  left_join(results_all  %>% 
+              filter(runname  %in% "RS1", sim == 0) %>% 
+              select(runname, year, FR_det = FR_MA)) %>%  
+  select(runname, year, FR.q25, FR.q50, FR.q75, FR_det) %>% 
+  gather(type, value, -runname, -year) %>% 
+  mutate(type = factor(type, levels = c("FR.q75", "FR.q50", "FR.q25", "FR_det"), 
+                             labels = c("75th percentile", "50th percentile", "25th percentile", "Deterministic"))) %>% 
+  ggplot(aes(x = year, y = value,
+             color = type,
+             shape = type)) + theme_bw() + 
+  geom_line() + 
+  geom_point(size = 2) + 
+  geom_hline(yintercept = 100, linetype = 2, size = 1) +
+  coord_cartesian(ylim = c(40,200)) + 
+  scale_x_continuous(breaks = c(2017, seq(2020, 2040, 5),2046)) + 
+  scale_y_continuous(breaks = seq(0, 500, 20)) + 
+  scale_color_manual(values = c(RIG.green, RIG.blue, RIG.red, "black"),  name = NULL) + 
+  scale_shape_manual(values = c(15, 16, 17, 18),  name = NULL) +
+  labs(title = fig.title,
+       subtitle = fig.subtitle,
+       x = NULL, y = "Percent") + 
+  theme(axis.text.x = element_text(size = 8)) + 
+  RIG.theme()
+fig_CP.RS1.FRdistx
+
+# x <- ggplotly(fig_CP.RS1.FRdistx)
+# x
+# x 
+# x %>% 
+#   layout(title = "", 
+#          margin = list(
+#            t= 80,
+#            b= 40,
+#            l= 40,
+#            r= 40,
+#            pad= 0)
+#          ) %>% 
+#   add_annotations(x = 0.5, y = 1.1, text = "Distribution of funded \nratios across simulations", 
+#                   xref = "paper", yref = "paper", showarrow= F) %>% 
+#   config(displayModeBar = "hover")
 
 
 
-
-
+fig_CP.RS1.FRdist$data
 
 
