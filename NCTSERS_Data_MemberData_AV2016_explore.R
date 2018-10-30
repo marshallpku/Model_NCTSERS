@@ -397,13 +397,6 @@ import_actives(file_memberData, "Actives", "Actives")
   #   - salary
 
 
-
-
-
-
-
-
-
 init_actives_all %>% 
   filter(str_detect(planname, "t1"), age %in% 20:24, yos %in% 0:4) %>% 
   ungroup() %>% 
@@ -421,7 +414,6 @@ init_actives_all %>%
   spread(yos, salary)
 
 
-
 # df_allTiers %>% filter(planname == "Actives_fillin") %>% 
 #   summarise(sum(nactives),
 #             sum(nactives*salary)/sum(nactives) )
@@ -437,8 +429,7 @@ init_actives_all %>%
 #*************************************************************************************************************
 
 fn_ret.ben <- function(sheet, fileName_){
-
-
+  
   # fileName_ = fileName
   # Tier_select = "t76"
 
@@ -456,7 +447,7 @@ fn_ret.ben <- function(sheet, fileName_){
 # init_retirees_all      <- fn_ret.ben("Retirees_allTiers", file_memberData)
 # init_beneficiaries_all <- fn_ret.ben("Beneficiaries_allTiers", file_memberData)
 # init_disb_all          <- fn_ret.ben("Disb_allTiers", file_memberData)
-#  
+  
 # init_retirees_all
 # init_beneficiaries_all
 # init_disb_all
